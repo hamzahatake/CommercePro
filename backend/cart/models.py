@@ -7,7 +7,11 @@ class Cart(models.Model):
 
 
 class CartItems(models.Model):
-    cart = models.ManyToManyField(Cart)
-    products = models.ForeignKey(Product)
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product)
     quantity = models.PositiveIntegerField(default=1)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['cart', 'product'], name='unique_cart_product')
+        ]

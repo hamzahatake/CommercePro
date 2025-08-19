@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from orders.models import Order
+from orders.models import OrderItem
 from django.db.models import Sum
 
 class User(AbstractUser):
@@ -11,7 +11,6 @@ class User(AbstractUser):
     ]
 
     role = models.CharField(max_length=50, choices=Role_Choices, blank=False)
-    is_active = models.BooleanField(default=False)
 
 
 class VendorProfile(models.Model):
@@ -19,11 +18,11 @@ class VendorProfile(models.Model):
 
     business_name = models.CharField(max_length=255)
     approved_at = models.DateTimeField(null=True)
-    total_sales = models.IntegerField(null=True)
 
     @property
     def sales(self):
-        result = Order.objects.filter(
-            vendor=self, status='paid').aggregate(total=Sum('total_sales'))
+        result = (OrderItem.objects
+            .filter(product__vendor=self, order__status="paid")
+            .aggregate(total=Sum("price_snapshot")))
         
         return result['total'] or 0

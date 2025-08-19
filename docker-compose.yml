@@ -26,7 +26,7 @@ services:
 
   web:
     build:
-      context: C:/Hamza/CommercePro/backend 
+      context: ./backend
       dockerfile: Dockerfile
     command: /app/entrypoint.sh
     env_file:

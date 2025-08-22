@@ -1,4 +1,5 @@
 services:
+  # PostgreSQL
   db:
     image: postgres:15
     restart: unless-stopped
@@ -16,6 +17,7 @@ services:
       timeout: 5s
       retries: 5
 
+  # Redis
   redis:
     image: redis:7
     restart: unless-stopped
@@ -24,15 +26,16 @@ services:
     volumes:
       - redis_data:/data
 
+  # Django Backend
   web:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    command: /app/entrypoint.sh
+    command: python manage.py runserver 0.0.0.0:8000  # Hot reload during dev
     env_file:
       - .env
     volumes:
-      - .:/app            
+      - ./backend:/app            
       - static_volume:/app/static
       - media_volume:/app/media
     ports:
@@ -43,6 +46,7 @@ services:
       redis:
         condition: service_started
 
+  # pgAdmin for DB management
   pgadmin:
     image: dpage/pgadmin4
     environment:
@@ -53,6 +57,24 @@ services:
     depends_on:
       - db
 
+  # React Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    command: npm run dev
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true       # ensures hot-reload works on Docker volumes
+      - VITE_API_URL=http://localhost:8000  # frontend API calls
+    ports:
+      - "3000:3000"
+    depends_on:
+      - web
+
+# Volumes for persistent storage
 volumes:
   db_data:
   redis_data:

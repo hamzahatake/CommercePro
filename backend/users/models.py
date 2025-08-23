@@ -48,12 +48,10 @@ class VendorProfile(models.Model):
         validate_image_size, 
         FileExtensionValidator(allowed_extensions=["jpg", "jpeg", "png"])
         ],
-    blank=True,
-    null=True)
+        blank=True, null=True)
     business_document = models.FileField(upload_to='business_docs/', validators=[
         validate_document_size, validate_document_type], 
-        blank=True, 
-        null=True)
+        blank=True, null=True)
     approval_status = models.CharField(max_length=20, choices=approval_stat, default="pending")
     approved_at = models.DateTimeField(null=True)
     approved_by = models.ForeignKey(

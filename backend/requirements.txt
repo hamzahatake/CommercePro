@@ -1,0 +1,15 @@
+Django>=5.0,<6.0
+Pillow>=10.0
+celery>=5.3.0
+stripe==6.0.0
+djangorestframework
+djangorestframework-simplejwt
+django-filter
+psycopg2-binary
+gunicorn
+redis
+python-dotenv
+django-cors-headers
+whitenoise
+# Optional for API docs
+drf-yasg

@@ -1,0 +1,35 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile   # dev-friendly Dockerfile
+    container_name: django_backend_dev
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=1
+    depends_on:
+      - db
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile   # if you create a dev Dockerfile, point here
+    container_name: react_frontend_dev
+    command: npm run dev
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules   # avoids overwriting container node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    depends_on:
+      - backend
+
+  db:
+    ports:
+      - "5432:5432"   # expose DB locally for tools like pgAdmin

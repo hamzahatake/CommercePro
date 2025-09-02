@@ -1,0 +1,7 @@
+1 - Download Windows version from 'https://stripe.com/docs/stripe-cli'
+
+2 - Add folder location of downloaded file to Environment Variables.
+
+3 - Run CMD. Add stripe, then stripe login. Once login from browser it will start listening.
+
+4 - Open another CMD and add 'stripe payment_intents create --amount 4000 --currency usd'

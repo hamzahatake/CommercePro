@@ -1,0 +1,34 @@
+# Environment files
+.env
+.env.*
+**/.env
+**/.env.*
+frontend/public/.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# Django
+*.log
+staticfiles/
+media/
+
+# Node / Frontend
+node_modules/
+dist/
+build/
+.vite/
+.cache/
+*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+

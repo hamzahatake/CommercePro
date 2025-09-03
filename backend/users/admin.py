@@ -8,7 +8,7 @@ from .models import User, VendorProfile
 
 admin.site.register(User)
 
-# --- Admin Action Functions ---
+"--- Admin Action Functions ---"
 
 def approve_vendors(modeladmin, request, queryset):
     if not request.user.is_superuser:

@@ -1,0 +1,14 @@
+Hello {{ vendor_name }},
+
+Thank you for applying to become a vendor on {{ site_name }}.
+
+Unfortunately, your application was not approved at this time.
+
+{% if reason %}
+Reason: {{ reason }}
+{% endif %}
+
+If you believe this was a mistake or would like more details, please contact us at {{ support_email }}.
+
+Best regards,
+The {{ site_name }} Team

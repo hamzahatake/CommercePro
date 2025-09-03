@@ -1,0 +1,17 @@
+Thank you for your order, {{ customer_name }}!
+
+Your order #{{ order_id }} has been successfully placed on {{ site_name }}.
+
+Order Summary:
+{% for item in items %}
+- {{ item.quantity }} x {{ item.product_name }} — ${{ item.price }}
+{% endfor %}
+
+Total: ${{ total }}
+
+You can view your order history here: {{ order_url }}
+
+We’ll notify you when your items are shipped.
+
+Thank you for shopping with us!
+— The {{ site_name }} Team

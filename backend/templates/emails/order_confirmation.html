@@ -1,0 +1,24 @@
+<html>
+  <body style="font-family: Arial, sans-serif; color: #333;">
+    <h2>Thank you for your order, {{ customer_name }}!</h2>
+    <p>Your order <strong>#{{ order_id }}</strong> has been successfully placed on {{ site_name }}.</p>
+
+    <h3>Order Summary</h3>
+    <ul>
+      {% for item in items %}
+        <li>{{ item.quantity }} × {{ item.product_name }} — ${{ item.price }}</li>
+      {% endfor %}
+    </ul>
+    <p><strong>Total:</strong> ${{ total }}</p>
+
+    <p>You can view your order history anytime by logging into your account:</p>
+    <p>
+      <a href="{{ order_url }}" style="color: #1a73e8; text-decoration: none;">
+        View My Orders
+      </a>
+    </p>
+
+    <p>We’ll notify you when your items are shipped.<br>Thank you for shopping with us!</p>
+    <p>— The {{ site_name }} Team</p>
+  </body>
+</html>

@@ -11,5 +11,9 @@ redis
 python-dotenv
 django-cors-headers
 whitenoise
+pytest
+pytest-django
+pytest-cov
+model-bakery
 # Optional for API docs
 drf-yasg

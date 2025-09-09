@@ -31,7 +31,7 @@ urlpatterns = [
     # App URLs
     path('api/', include('users.urls')),
     path('api/cart/', include('cart.urls')),
-    path('api/products/', include('products.urls')),
+    path('api/', include('products.urls')),
     path('api/orders/', include('orders.urls')),
     path('api/wishlist/', include('wishlist.urls')),
 ]

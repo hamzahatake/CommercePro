@@ -3,7 +3,7 @@ import { formatQueryParams } from "../../utils/queryParams.js";
 
 export const productApi = createApi({
   reducerPath: "productApi",
-  baseQuery: fetchBaseQuery({ baseUrl: "http://localhost:8000/api" }),
+  baseQuery: fetchBaseQuery({ baseUrl: "http://localhost:8000/api/" }),
   endpoints: (builder) => ({
     getProducts: builder.query({
       query: ({ page = 1, search, category, ordering } = {}) => {
@@ -12,7 +12,7 @@ export const productApi = createApi({
       },
     }),
     getProductDetail: builder.query({
-      query: ({ slug }) => `/products/${slug}`,
+      query: ({ slug }) => `products/${slug}/`,
     }),
   }),
 });

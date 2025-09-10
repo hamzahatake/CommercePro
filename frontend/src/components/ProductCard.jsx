@@ -1,34 +1,30 @@
-import { motion as Motion} from "framer-motion";
+import { motion as Motion } from "framer-motion";
 import Shoe from "../../public/items/Shoe1.webp";
+import ProductImage from "./ProductImage";
 
-export default function ProductCard() {
+export default function ProductCard({ product }) {
     return (
         <Motion.div
             className="max-w-sm w-full"
             whileHover={{ scale: 1.02 }}
-            transition={{ duration: 0.2 }}
-        >
+            transition={{ duration: 0.2 }} >
+
             <div className="relative rounded-2xl shadow-lg overflow-hidden bg-white">
-                {/* BestSeller Badge */}
+                {/* Badge */}
                 <div className="absolute top-3 right-3 bg-amber-800 text-white font-bold text-xs px-3 py-1 rounded-lg">
                     BestSeller
                 </div>
 
                 {/* Shoe Image */}
                 <div className="flex justify-center items-center p-6">
-                    <img
-                        src={Shoe}
-                        alt="Shoe"
-                        className="object-contain w-48 h-40"
-                    />
+                    <ProductImage product={product} variant="desktop" />
                 </div>
 
                 {/* Bottom Section */}
                 <div className="flex justify-between items-start p-4">
-                    {/* Left Side */}
                     <div>
-                        <h3 className="font-bold text-lg">AirFlex Runner</h3>
-                        <p className="text-sm text-gray-600">Available in Red, Blue, Black</p>
+                        <h3 className="font-bold text-lg">{product.title}</h3>
+                        <p className="text-sm text-gray-600">Color Name</p>
 
                         {/* Color Swatches */}
                         <div className="flex gap-2 mt-2">
@@ -38,9 +34,9 @@ export default function ProductCard() {
                         </div>
                     </div>
 
-                    {/* Right Side */}
+                    {/* Pricing */}
                     <div className="text-right">
-                        <p className="font-semibold text-lg">$120</p>
+                        <p className="font-semibold text-lg">${product.base_price}</p>
                     </div>
                 </div>
             </div>

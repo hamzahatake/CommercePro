@@ -2,6 +2,7 @@ import { useGetProductsQuery } from "../features/products/productApi";
 import { useQueryParams } from "../utils/useQueryParams";
 import ShoeLoader from "../components/ShoeLoader";
 import ShoeNotAvailable from "../components/ShoeNotAvailable";
+import ProductCard from "../components/ProductCard";
 
 export const Products = () => {
   const [query, setQuery] = useQueryParams(); // Getting used in useGetProductQuery
@@ -16,7 +17,9 @@ export const Products = () => {
       {isLoading && <ShoeLoader />}
       {error && <ShoeNotAvailable />}
       {products?.map((product) => (
-        <div key={product.id}>{product.name}</div>
+        <div key={product.id}>
+          <ProductCard />
+        </div>
       ))}
 
       <button onClick={changePage}>Go to page 2</button>

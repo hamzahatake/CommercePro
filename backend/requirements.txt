@@ -5,6 +5,7 @@ stripe==6.0.0
 djangorestframework
 djangorestframework-simplejwt
 django-filter
+django-nested-admin
 psycopg2-binary
 gunicorn
 redis

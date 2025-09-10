@@ -1,49 +1,131 @@
 from rest_framework import viewsets, generics, filters
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from .models import Product, Category
-from .serializers import ProductSerializer, ProductPublicSerializer, CategorySerializer
+from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend, FilterSet, CharFilter
+from rest_framework.pagination import PageNumberPagination
+
+from .models import Product, Category, ProductVariant, ProductSize, ProductImage
+from .serializers import (
+    ProductSerializer,
+    ProductPublicSerializer,
+    CategorySerializer,
+    ProductVariantSerializer,
+    ProductSizeSerializer,
+    ProductImageSerializer,
+)
 from .permissions import IsVendorOrAdmin
-from django_filters.rest_framework import DjangoFilterBackend
+
+
+class ProductPagination(PageNumberPagination):
+    page_size = 20
+    page_size_query_param = "page_size"
+    max_page_size = 100
+
+
+class ProductFilter(FilterSet):
+    category = CharFilter(field_name="category__slug", lookup_expr="iexact")
+
+    class Meta:
+        model = Product
+        fields = ["category"]
+
 
 class VendorProductViewSet(viewsets.ModelViewSet):
-    """ViewSet for vendors to manage their products"""
+    """Vendors/Admins manage their own products"""
     serializer_class = ProductSerializer
     permission_classes = [IsAuthenticated, IsVendorOrAdmin]
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_superuser or user.role == 'admin':
+        if getattr(user, "is_superuser", False) or getattr(user, "role", None) == "admin":
             return Product.objects.all()
-        if user.role == 'vendor':
+        if getattr(user, "role", None) == "vendor":
             return Product.objects.filter(vendor=user)
         return Product.objects.none()
 
     def perform_create(self, serializer):
         serializer.save(vendor=self.request.user)
 
+
 class ProductListView(generics.ListAPIView):
-    """Public view for customers to browse products"""
+    """Public product list (with search, filter, pagination)"""
     serializer_class = ProductPublicSerializer
     permission_classes = [AllowAny]
-    queryset = Product.objects.filter(is_active=True)
+    pagination_class = ProductPagination
+
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    
-    filterset_fields = ['category']
-    
-    search_fields = ['title', 'description']
-    
-    ordering_fields = ['price', 'stock', 'created_at']
-    ordering = ['-created_at']
+    filterset_class = ProductFilter
+    search_fields = ["title", "description"]
+    ordering_fields = ["base_price", "created_at"]
+    ordering = ["-created_at"]
+
+    def get_queryset(self):
+        return Product.objects.filter(is_active=True).prefetch_related(
+            "variants__images", "variants__sizes"
+        )
+
 
 class ProductDetailView(generics.RetrieveAPIView):
-    """Public view for customers to view individual product details"""
+    """Public product detail (includes variants/images/sizes)"""
     serializer_class = ProductPublicSerializer
     permission_classes = [AllowAny]
-    queryset = Product.objects.filter(is_active=True)
-    lookup_field = 'slug'
+    lookup_field = "slug"
+
+    def get_queryset(self):
+        return Product.objects.filter(is_active=True).prefetch_related(
+            "variants__images", "variants__sizes"
+        )
+
 
 class CategoryListView(generics.ListAPIView):
-    """Public view to list all categories"""
+    """List all categories"""
     serializer_class = CategorySerializer
     permission_classes = [AllowAny]
-    queryset = Category.objects.all()  
+    queryset = Category.objects.all()
+
+
+class ProductVariantViewSet(viewsets.ModelViewSet):
+    """Vendors/Admins manage product variants"""
+    serializer_class = ProductVariantSerializer
+    permission_classes = [IsAuthenticated, IsVendorOrAdmin]
+
+    def get_queryset(self):
+        user = self.request.user
+        if getattr(user, "is_superuser", False) or getattr(user, "role", None) == "admin":
+            return ProductVariant.objects.all()
+        if getattr(user, "role", None) == "vendor":
+            return ProductVariant.objects.filter(product__vendor=user)
+        return ProductVariant.objects.none()
+
+    def perform_create(self, serializer):
+        product_id = self.request.data.get("product")
+        product = get_object_or_404(Product, id=product_id, vendor=self.request.user)
+        serializer.save(product=product)
+
+
+class ProductSizeViewSet(viewsets.ModelViewSet):
+    """Manage sizes under a product variant"""
+    serializer_class = ProductSizeSerializer
+    permission_classes = [IsAuthenticated, IsVendorOrAdmin]
+
+    def get_queryset(self):
+        user = self.request.user
+        if getattr(user, "is_superuser", False) or getattr(user, "role", None) == "admin":
+            return ProductSize.objects.all()
+        if getattr(user, "role", None) == "vendor":
+            return ProductSize.objects.filter(variant__product__vendor=user)
+        return ProductSize.objects.none()
+
+
+class ProductImageViewSet(viewsets.ModelViewSet):
+    """Manage images under a product variant"""
+    serializer_class = ProductImageSerializer
+    permission_classes = [IsAuthenticated, IsVendorOrAdmin]
+
+    def get_queryset(self):
+        user = self.request.user
+        if getattr(user, "is_superuser", False) or getattr(user, "role", None) == "admin":
+            return ProductImage.objects.all()
+        if getattr(user, "role", None) == "vendor":
+            return ProductImage.objects.filter(variant__product__vendor=user)
+        return ProductImage.objects.none()

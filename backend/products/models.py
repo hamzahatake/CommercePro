@@ -2,6 +2,8 @@ from django.db import models
 from django.utils.text import slugify
 from django.conf import settings
 from .validators import pricing_rule, validate_image
+from .utils import product_variant_image_path
+from rest_framework.validators import ValidationError
 
 User = settings.AUTH_USER_MODEL
 
@@ -19,12 +21,6 @@ class Product(models.Model):
     title = models.CharField(max_length=255)
     slug = models.SlugField(blank=True, unique=True)
     description = models.TextField(blank=True)
-    main_image = models.ImageField(
-        upload_to="products/main_images/",
-        blank=True,
-        null=True,
-        default="products/default.png"
-    )
     base_price = models.DecimalField(max_digits=10, decimal_places=2, validators=[pricing_rule], null=True, blank=True)
     category = models.ForeignKey(
         Category,
@@ -58,7 +54,7 @@ class Product(models.Model):
 class ProductVariant(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variants')
     color_name = models.CharField(max_length=50)
-    hex_code = models.CharField(max_length=7, blank=True)  # e.g. "#FFFFFF"
+    hex_code = models.CharField(max_length=7, blank=True)
     price_override = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
     def __str__(self):
@@ -75,7 +71,7 @@ class ProductImage(models.Model):
     )
 
     image = models.ImageField(
-        upload_to='products/variants/',
+        upload_to=product_variant_image_path,
         validators=[validate_image]
     )
 
@@ -85,8 +81,57 @@ class ProductImage(models.Model):
 
 class ProductSize(models.Model):
     variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE, related_name='sizes')
-    size_label = models.CharField(max_length=10)  # e.g. "US 9", "EU 42"
+    size_label = models.CharField(max_length=10)
     stock = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return f"{self.variant} - {self.size_label} ({self.stock} in stock)"
+    
+
+class ProductMediaSection(models.Model):
+    SECTION_TYPES = [
+        ("IMAGE_ROW", "Image Row (3-up)"),
+        ("VIDEO", "Video Block"),
+        ("COLLAGE", "Collage Grid"),
+        ("FULL_IMAGE", "Full-width Image"),
+    ]
+
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="media_sections")
+    section_type = models.CharField(max_length=20, choices=SECTION_TYPES)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["order"]
+
+    def __str__(self):
+        return f"{self.product.title} - {self.section_type} (Order {self.order})"
+
+
+class ProductMediaItem(models.Model):
+    ITEM_TYPES = [
+        ("IMAGE", "Image"),
+        ("VIDEO", "Video"),
+        ("TEXT", "Text"),
+    ]
+
+    section = models.ForeignKey(ProductMediaSection, on_delete=models.CASCADE, related_name="items")
+    item_type = models.CharField(max_length=10, choices=ITEM_TYPES)
+    image = models.ImageField(
+        upload_to="products/media/", 
+        blank=True, null=True, validators=[validate_image])
+    video_url = models.URLField(blank=True, null=True, help_text="External video link")
+    text = models.CharField(max_length=255, blank=True, null=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["order"]
+    
+    def clean(self):
+        if self.section.section_type == "IMAGE_ROW" and not self.image:
+            raise ValidationError("Image is required for IMAGE_ROW section")
+     
+        if self.section.section_type == "VIDEO_ROW" and not self.video_url:
+            raise ValidationError("Video URL is required for VIDEO_ROW section")
+        
+    def __str__(self):
+        return f"Item {self.id} in {self.section}"

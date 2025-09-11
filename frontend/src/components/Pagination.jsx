@@ -10,43 +10,42 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
     }
 
     return (
-        <div className="flex justify-center items-center space-x-2 my-4">
-            {/* Prev Button */}
+        <div className="flex justify-center items-center gap-4 my-6 text-neutral-200">
+            {/* Prev */}
             <button
                 onClick={() => onPageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className={`px-3 py-1 rounded border ${currentPage === 1
-                        ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                        : "bg-white text-gray-700 hover:bg-gray-100"
-                    }`}
+                aria-label="Previous page"
+                className={`px-2 py-1 rounded transition-colors ${currentPage === 1 ? "opacity-40 cursor-not-allowed" : "hover:text-white"}`}
             >
-                Prev
+                ‹
             </button>
 
-            {/* Page Number Buttons */}
-            {pages.map((page) => (
-                <button
-                    key={page}
-                    onClick={() => onPageChange(page)}
-                    className={`px-3 py-1 rounded border ${page === currentPage
-                            ? "bg-blue-500 text-white border-blue-500"
-                            : "bg-white text-gray-700 hover:bg-gray-100"
-                        }`}
-                >
-                    {page}
-                </button>
-            ))}
+            {/* Pages */}
+            <div className="flex items-center gap-6">
+                {pages.map((page) => (
+                    <button
+                        key={page}
+                        onClick={() => onPageChange(page)}
+                        aria-current={page === currentPage ? "page" : undefined}
+                        className={`${page === currentPage
+                                ? "px-2.5 py-1.5 rounded-md bg-neutral-800 text-white shadow-[0_0_0_1px_#ffffff12_inset]"
+                                : "hover:text-white"
+                            }`}
+                    >
+                        {page}
+                    </button>
+                ))}
+            </div>
 
-            {/* Next Button */}
+            {/* Next */}
             <button
                 onClick={() => onPageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className={`px-3 py-1 rounded border ${currentPage === totalPages
-                        ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                        : "bg-white text-gray-700 hover:bg-gray-100"
-                    }`}
+                aria-label="Next page"
+                className={`px-2 py-1 rounded transition-colors ${currentPage === totalPages ? "opacity-40 cursor-not-allowed" : "hover:text-white"}`}
             >
-                Next
+                ›
             </button>
         </div>
     );

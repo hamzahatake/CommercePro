@@ -1,45 +1,56 @@
 import { motion as Motion } from "framer-motion";
-import Shoe from "../../public/items/Shoe1.webp";
 import ProductImage from "./ProductImage";
+import { ColorSelector } from "./ColorSelector";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 
 export default function ProductCard({ product }) {
+    const [selectedColor, setSelectedColor] = useState(product?.variants?.[0]?.color_name || "");
+    const slug = product?.slug || product?.id;
+    const to = `/products/${slug}`;
+
     return (
         <Motion.div
-            className="max-w-sm w-full"
-            whileHover={{ scale: 1.02 }}
-            transition={{ duration: 0.2 }} >
+            className="w-full h-full"
+            whileHover={{ y: -2 }}
+            transition={{ duration: 0.15 }} >
 
-            <div className="relative rounded-2xl shadow-lg overflow-hidden bg-white">
+            <div className="relative h-full rounded-xl overflow-hidden bg-white text-neutral-900 border border-neutral-200 shadow-[0_1px_2px_#0000000a,0_10px_24px_-14px_#00000024] flex flex-col">
                 {/* Badge */}
-                <div className="absolute top-3 right-3 bg-amber-800 text-white font-bold text-xs px-3 py-1 rounded-lg">
-                    BestSeller
+                <div className="absolute top-3 left-3 bg-black/80 text-white font-semibold text-[10px] tracking-wide px-2.5 py-1 rounded">
+                    BEST SELLER
                 </div>
 
                 {/* Shoe Image */}
-                <div className="flex justify-center items-center p-6">
-                    <ProductImage product={product} variant="desktop" />
-                </div>
+                <Link to={to} aria-label={`View details for ${product.title}`} className="flex justify-center items-center p-6 aspect-[4/3] bg-neutral-50">
+                    <ProductImage product={product} variant="desktop" color={selectedColor} />
+                </Link>
 
                 {/* Bottom Section */}
-                <div className="flex justify-between items-start p-4">
-                    <div>
-                        <h3 className="font-bold text-lg">{product.title}</h3>
-                        <p className="text-sm text-gray-600">Color Name</p>
+                <div className="p-4 pt-3 flex-1 flex flex-col">
+                    <h3 className="font-semibold text-[15px] leading-tight">
+                        <Link to={to} className="hover:underline">{product.title}</Link>
+                    </h3>
+                    <p className="text-xs text-neutral-500 mt-0.5">{selectedColor || "Select a color"}</p>
 
-                        {/* Color Swatches */}
-                        <div className="flex gap-2 mt-2">
-                            <span className="w-5 h-5 rounded-full bg-red-500 border border-gray-300"></span>
-                            <span className="w-5 h-5 rounded-full bg-blue-500 border border-gray-300"></span>
-                            <span className="w-5 h-5 rounded-full bg-black border border-gray-300"></span>
-                        </div>
+                    {/* Color Swatches */}
+                    <div className="mt-2 flex gap-1.5">
+                        {product.variants.map((color) => (
+                            <button
+                                key={color.id}
+                                style={{ backgroundColor: color.hex_code }}
+                                className={`w-5 h-5 rounded-full border ${selectedColor === color.color_name ? "ring-2 ring-neutral-900 border-neutral-900" : "border-neutral-300"}`}
+                                onClick={(e) => { e.stopPropagation(); setSelectedColor(color.color_name); }}
+                            />
+                        ))}
                     </div>
 
-                    {/* Pricing */}
-                    <div className="text-right">
-                        <p className="font-semibold text-lg">${product.base_price}</p>
+                    {/* Pricing at bottom-right */}
+                    <div className="mt-auto flex justify-end">
+                        <Link to={to} className="font-semibold text-[15px] hover:underline">${product.base_price}</Link>
                     </div>
                 </div>
             </div>
-        </Motion.div>
+        </Motion.div >
     );
 }

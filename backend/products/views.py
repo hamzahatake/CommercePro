@@ -46,6 +46,10 @@ class VendorProductViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(vendor=self.request.user)
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["request"] = self.request
+        return context
 
 class ProductListView(generics.ListAPIView):
     """Public product list (with search, filter, pagination)"""
@@ -73,7 +77,7 @@ class ProductDetailView(generics.RetrieveAPIView):
 
     def get_queryset(self):
         return Product.objects.filter(is_active=True).prefetch_related(
-            "variants__images", "variants__sizes"
+            "variants__images", "variants__sizes", "media_sections__items"
         )
 
 

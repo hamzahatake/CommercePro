@@ -1,5 +1,13 @@
 from rest_framework import serializers
-from .models import Product, Category, ProductVariant, ProductSize, ProductImage
+from .models import (
+    Product, 
+    Category, 
+    ProductVariant, 
+    ProductSize, 
+    ProductImage,
+    ProductMediaSection,
+    ProductMediaItem
+)
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -9,10 +17,17 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class ProductImageSerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+
     class Meta:
         model = ProductImage
-        fields = ["id", "image", "alt_text"]
-        read_only_fields = ["id"]
+        fields = ["id", "image_url"]
+
+    def get_image_url(self, obj):
+        request = self.context.get("request")
+        if obj.image and request:
+            return request.build_absolute_uri(obj.image.url)
+        return obj.image.url if obj.image else None
 
 
 class ProductSizeSerializer(serializers.ModelSerializer):
@@ -32,12 +47,36 @@ class ProductVariantSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "product"]
 
 
+class ProductMediaItemSerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField() 
+
+    class Meta:
+        model = ProductMediaItem
+        fields = ["id", "item_type", "image_url", "video_url", "text", "order"]
+
+    def get_image_url(self, obj):
+        request = self.context.get("request")
+        if obj.image and request:
+            return request.build_absolute_uri(obj.image.url)
+        return obj.image.url if obj.image else None
+
+
+class ProductMediaSectionSerializer(serializers.ModelSerializer):
+    items = ProductMediaItemSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = ProductMediaSection
+        fields = ["id", "section_type", "order", "items"]
+        read_only = fields
+
+
 class ProductSerializer(serializers.ModelSerializer):
     variants = ProductVariantSerializer(many=True, read_only=True)
     category = CategorySerializer(read_only=True)
     category_id = serializers.IntegerField(
         write_only=True, required=False, allow_null=True
     )
+    media_sections = ProductMediaSectionSerializer(many=True, read_only=True)
 
     class Meta:
         model = Product
@@ -53,6 +92,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "variants",
+            "media_sections",
         ]
         read_only_fields = ["id", "vendor", "slug", "created_at", "updated_at"]
 
@@ -60,6 +100,8 @@ class ProductSerializer(serializers.ModelSerializer):
         if value <= 0:
             raise serializers.ValidationError("Price must be positive.")
         return value
+    
+    
 
 
 class ProductPublicSerializer(serializers.ModelSerializer):

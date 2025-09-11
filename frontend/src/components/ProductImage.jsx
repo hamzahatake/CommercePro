@@ -1,13 +1,29 @@
 import { motion as Motion } from "framer-motion";
 
-export default function ProductImage({product, variant = "desktop" }) {
-    const baseClasses = "object-contain w-48 h-40";
+export default function ProductImage({ product, color, variant = "desktop" }) {
+    const baseClasses = "object-contain w-48 h-40 md:w-56 md:h-44";
+
+    const variantsArray = Array.isArray(product?.variants) ? product.variants : [];
+    const firstVariant = variantsArray[0];
+    const selectedVariant = color
+        ? (variantsArray.find((v) => v?.color_name === color) || firstVariant)
+        : null;
+
+    const imageSrc =
+        (Array.isArray(selectedVariant?.images) && selectedVariant.images[0]?.image_url) || (product?.main_image_url || "");
+
+    const altText = product?.title || "Product image";
+
+    if (!imageSrc) {
+        return null;
+    }
 
     if (variant === "desktop") {
+        
         return (
             <Motion.img
-                src={product?.main_image}
-                alt={product?.title}
+                src={imageSrc}
+                alt={altText}
                 loading="lazy"
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}

@@ -18,6 +18,7 @@ class Category(models.Model):
 
 class Product(models.Model):
     vendor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='products')
+    badge = models.CharField(max_length=255, blank=True, null=True)
     title = models.CharField(max_length=255)
     slug = models.SlugField(blank=True, unique=True)
     description = models.TextField(blank=True)

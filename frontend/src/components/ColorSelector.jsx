@@ -5,7 +5,7 @@ export function ColorSelector({ colors, selectedColor, onSelect }) {
                 <button
                     key={color.id}
                     style={{ backgroundColor: color.hex_code }}
-                    className={`w-6 h-6 rounded-full border-2 ${selectedColor === color.name ? "ring-2 ring-black" : "border-gray-300"
+                    className={`w-6 h-6 rounded-full border-2 ${selectedColor === color.name ? "ring-2 ring-white" : "border-gray-300"
                         }`}
                     onClick={() => onSelect(color.name)}
                 />

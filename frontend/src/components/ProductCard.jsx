@@ -1,13 +1,17 @@
 import { motion as Motion } from "framer-motion";
 import ProductImage from "./ProductImage";
-import { ColorSelector } from "./ColorSelector";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
 export default function ProductCard({ product }) {
     const [selectedColor, setSelectedColor] = useState(product?.variants?.[0]?.color_name || "");
+    const [selectedVariant, setSelectedVariant] = useState(null)
     const slug = product?.slug || product?.id;
     const to = `/products/${slug}`;
+    const displayPrice = selectedVariant?.price_override 
+    ? selectedVariant.price_override 
+    : product.base_price;
+   
 
     return (
         <Motion.div
@@ -18,7 +22,7 @@ export default function ProductCard({ product }) {
             <div className="relative h-full rounded-xl overflow-hidden bg-white text-neutral-900 border border-neutral-200 shadow-[0_1px_2px_#0000000a,0_10px_24px_-14px_#00000024] flex flex-col">
                 {/* Badge */}
                 <div className="absolute top-3 left-3 bg-black/80 text-white font-semibold text-[10px] tracking-wide px-2.5 py-1 rounded">
-                    BEST SELLER
+                    {product.badge}
                 </div>
 
                 {/* Shoe Image */}
@@ -39,15 +43,15 @@ export default function ProductCard({ product }) {
                             <button
                                 key={color.id}
                                 style={{ backgroundColor: color.hex_code }}
-                                className={`w-5 h-5 rounded-full border ${selectedColor === color.color_name ? "ring-2 ring-neutral-900 border-neutral-900" : "border-neutral-300"}`}
-                                onClick={(e) => { e.stopPropagation(); setSelectedColor(color.color_name); }}
+                                className={`w-5 h-5 rounded-full border ${selectedColor === color.color_name ? "ring-2 ring-neutral-300 border-neutral-100" : "border-neutral-300"}`}
+                                onClick={(e) => { e.stopPropagation(); setSelectedColor(color.color_name); setSelectedVariant(color)}}
                             />
                         ))}
                     </div>
 
                     {/* Pricing at bottom-right */}
                     <div className="mt-auto flex justify-end">
-                        <Link to={to} className="font-semibold text-[15px] hover:underline">${product.base_price}</Link>
+                        <Link to={to} className="font-semibold text-[15px] hover:underline">${displayPrice}</Link>
                     </div>
                 </div>
             </div>

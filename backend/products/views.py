@@ -51,8 +51,8 @@ class VendorProductViewSet(viewsets.ModelViewSet):
         context["request"] = self.request
         return context
 
+
 class ProductListView(generics.ListAPIView):
-    """Public product list (with search, filter, pagination)"""
     serializer_class = ProductPublicSerializer
     permission_classes = [AllowAny]
     pagination_class = ProductPagination
@@ -70,7 +70,6 @@ class ProductListView(generics.ListAPIView):
 
 
 class ProductDetailView(generics.RetrieveAPIView):
-    """Public product detail (includes variants/images/sizes)"""
     serializer_class = ProductPublicSerializer
     permission_classes = [AllowAny]
     lookup_field = "slug"
@@ -82,7 +81,6 @@ class ProductDetailView(generics.RetrieveAPIView):
 
 
 class CategoryListView(generics.ListAPIView):
-    """List all categories"""
     serializer_class = CategorySerializer
     permission_classes = [AllowAny]
     queryset = Category.objects.all()
@@ -108,7 +106,6 @@ class ProductVariantViewSet(viewsets.ModelViewSet):
 
 
 class ProductSizeViewSet(viewsets.ModelViewSet):
-    """Manage sizes under a product variant"""
     serializer_class = ProductSizeSerializer
     permission_classes = [IsAuthenticated, IsVendorOrAdmin]
 
@@ -122,7 +119,6 @@ class ProductSizeViewSet(viewsets.ModelViewSet):
 
 
 class ProductImageViewSet(viewsets.ModelViewSet):
-    """Manage images under a product variant"""
     serializer_class = ProductImageSerializer
     permission_classes = [IsAuthenticated, IsVendorOrAdmin]
 

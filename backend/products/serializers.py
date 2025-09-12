@@ -43,7 +43,7 @@ class ProductVariantSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductVariant
-        fields = ["id", "product", "color_name", "hex_code", "images", "sizes"]
+        fields = ["id", "product", "color_name", "hex_code", "price_override", "images", "sizes"]
         read_only_fields = ["id", "product"]
 
 
@@ -82,6 +82,7 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = [
             "id",
+            "badge",
             "title",
             "slug",
             "description",
@@ -113,6 +114,7 @@ class ProductPublicSerializer(serializers.ModelSerializer):
         model = Product
         fields = [
             "id",
+            "badge",
             "title",
             "slug",
             "description",

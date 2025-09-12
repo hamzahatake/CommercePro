@@ -1,5 +1,6 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { formatQueryParams } from "../../utils/queryParams.js";
+import { normalizeProduct } from "./productNormalization.js";
 
 export const productApi = createApi({
   reducerPath: "productApi",
@@ -8,11 +9,12 @@ export const productApi = createApi({
     getProducts: builder.query({
       query: ({ page = 1, search, category, ordering } = {}) => {
         const query = formatQueryParams({ page, search, category, ordering });
-        return `products/${query}`; // Taking current page, search, category, ordering info from "query" state inside Product component
+        return `products/${query}`;
       },
     }),
     getProductDetail: builder.query({
       query: ({ slug }) => `products/${slug}/`,
+      transformResponse: (response) => normalizeProduct(response),
     }),
   }),
 });

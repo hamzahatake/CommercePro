@@ -1,27 +1,27 @@
 import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useGetProductDetailQuery } from "../features/products/productApi";
-import { normalizeProduct } from "../features/products/productNormalization";
 import Breadcrumbs from "../components/pdp/Breadcrumbs";
 import TopHeading from "../components/pdp/TopHeading";
-import GalleryColumn from "../components/pdp/GalleryColumn";
 import InfoColumn from "../components/pdp/InfoColumn";
 import DetailsTabs from "../components/pdp/DetailsTabs";
 import RelatedProducts from "../components/pdp/RelatedProducts";
 import FooterCTAs from "../components/pdp/FooterCTAs";
+import ImageCarousel from "../components/pdp/ImageCarousel";
 
 export default function ProductDetailPage() {
   const { slug } = useParams();
   const { data: product, isLoading, error } = useGetProductDetailQuery({ slug });
   const [variantIndex, setVariantIndex] = useState(0);
+  const [imageIndex, setImageIndex] = useState(0);
 
-  const normalized = normalizeProduct(product || {});
+  const normalized = product || { variants: [] };
   const currentVariant = normalized.variants[variantIndex] || normalized.variants[0] || { images: [] }; // Finds the current index of variant || Selects first Index || Shows an Image
   const variantImages = useMemo(() => (
-    currentVariant.images || []), [currentVariant]);
+    currentVariant.images || []), [currentVariant]); // We can also render it directly using activeVariant.Image but Image component re-renders often, useMemo avoids recalculating the images array reference
 
   return (
-    <div className="max-w-[1200px] mx-auto px-8 py-8">
+    <div className="max-w-full">
       {isLoading && (
         <div className="text-gray-500">Loading…</div>
       )}
@@ -30,29 +30,44 @@ export default function ProductDetailPage() {
       )}
       {!isLoading && !error && product && (
         <>
-          <Breadcrumbs breadcrumbs={["Home", "Men", normalized.title]} />
-
-          <TopHeading title={normalized.title} blurb={normalized.tagline} />
-
-          <div className="grid gap-[32px] lg:grid-cols-[1fr_420px]">
-            <GalleryColumn images={variantImages} title={normalized.title} />
-            <InfoColumn
-              product={normalized}
-              variants={normalized.variants}
-              variantIndex={variantIndex}
-              onVariantChange={setVariantIndex} />
+          {/* Full-width carousel at the top */}
+          <div className="w-full">
+            <ImageCarousel
+              images={variantImages}
+              title={normalized.title}
+              activeIndex={imageIndex}
+              setActiveIndex={setImageIndex}
+            />
           </div>
 
-          <div className="mt-8">
-            <DetailsTabs product={normalized} />
-          </div>
+          <div className="px-6 md:px-6 lg:px-6 xl:px-6 2xl:px-6 max-w-[1850px] mx-auto">
+            <Breadcrumbs breadcrumbs={["Home", "Men", normalized.title]} />
 
-          <div className="mt-8">
-            <RelatedProducts relatedProducts={normalized.relatedProducts || []} />
-          </div>
+            <TopHeading title={normalized.title} blurb={normalized.tagline} />
 
-          <div className="mt-8">
-            <FooterCTAs />
+            {/* Details below */}
+            <div className="grid gap-[32px]">
+              <InfoColumn
+                product={normalized}
+                variants={normalized.variants}
+                variantIndex={variantIndex}
+                onVariantChange={(idx) => {
+                  setVariantIndex(idx);
+                  setImageIndex(0);
+                }} />
+            </div>
+
+            <div className="mt-8">
+              <DetailsTabs product={normalized} />
+            </div>
+
+            <div className="mt-8">
+              <RelatedProducts relatedProducts={normalized.relatedProducts || []} />
+            </div>
+
+            <div className="mt-8">
+              <FooterCTAs />
+            </div>
           </div>
         </>
       )}

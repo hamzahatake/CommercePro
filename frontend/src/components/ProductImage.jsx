@@ -1,7 +1,7 @@
 import { motion as Motion } from "framer-motion";
 
 export default function ProductImage({ product, color, variant = "desktop" }) {
-    const baseClasses = "object-contain w-48 h-40 md:w-56 md:h-44";
+    const baseClasses = "object-contain w-full h-full";
 
     const variantsArray = Array.isArray(product?.variants) ? product.variants : [];
     const firstVariant = variantsArray[0];

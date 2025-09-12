@@ -14,16 +14,16 @@ const catalogs = [
 
 export default function CatalogGrid() {
   return (
-    <section className="w-full mt-8 md:mt-12">
+    <section className="w-fit mt-4 md:mt-4">
       {/* Desktop */}
-      <div className="hidden md:grid grid-cols-4 gap-3">
+      <div className="hidden md:grid grid-cols-4 gap-3 mx-2">
         {catalogs.map((item, i) => (
           <CatalogCard key={i} image={item.image} alt={item.alt} />
         ))}
       </div>
 
       {/* Mobile */}
-      <div className="flex md:hidden gap-3 overflow-x-auto no-scrollbar px-4">
+      <div className="flex md:hidden overflow-x-auto no-scrollbar px-4">
         {catalogs.map((item, i) => (
           <div key={i} className="flex-shrink-0 w-[80%]">
             <CatalogCard image={item.image} alt={item.alt} />

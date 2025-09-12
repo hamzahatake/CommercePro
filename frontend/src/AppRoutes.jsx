@@ -4,6 +4,7 @@ import Navbar from "./components/Navbar";
 import { Home } from "./pages/Home";
 import { ProductsList } from "./pages/ProductsListPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
+import PDPReference from "./pages/PDPReference";
 
 
 const AppRoutes = () => {
@@ -14,6 +15,7 @@ const AppRoutes = () => {
         <Route path="/" element={<Home />} />
         <Route path="/products" element={<ProductsList />} />
         <Route path="/products/:slug" element={<ProductDetailPage />} />
+        <Route path="/pdp-ref" element={<PDPReference />} />
       </Routes>
     </Router>
   );

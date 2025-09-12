@@ -7,9 +7,6 @@ export function Home() {
         <div className="w-full">
             <VideoHero />
             <CatalogGrid />
-            <div className="px-4 mt-8 md:mt-10">
-            <ProductsList />
-            </div>
         </div>
     );
 }

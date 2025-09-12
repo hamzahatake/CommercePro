@@ -13,7 +13,7 @@ export const normalizeProduct = (p) => {
             price: v.price_override ?? price,
             sizes: (v.sizes || []).map((s) => ({
                 id: s.id,
-                label: s.size_label,
+                label: s.size_label,   
                 stock: s.stock,
             })),
             images: (v.images || []).map((im, idx) => ({

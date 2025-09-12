@@ -1,18 +1,18 @@
 import { useState } from "react";
 
-export default function InfoColumn({ product, variants = [], selectedVariantIdx = 0, onVariantChange,}) {
-  const [selectedSizeIdx, setSelectedSizeIdx] = useState(-1);
+export default function InfoColumn({ product, variants = [], variantIndex = 0, onVariantChange,}) {
+  const [sizeIndex, setSizeIndex] = useState(-1);
   const [quantity, setQuantity] = useState(1);
 
-  const currentVariant = variants[selectedVariantIdx] || variants[0] || null;
+  const currentVariant = variants[variantIndex] || variants[0] || null;
 
-  const sizes =
-    currentVariant?.sizes?.map((s) => ({
+  const sizes = currentVariant?.sizes?.map((s) => ({
       label: s.label,
-      available: (s.stock ?? 0) > 0,
+      id: s.id,
+      available: Boolean(s.stock > 0),
     })) || [];
 
-  const addDisabled = selectedSizeIdx < 0;
+  const addDisabled = sizeIndex < 0;
 
   const onAddToCart = () => {
     if (addDisabled) return;
@@ -24,7 +24,7 @@ export default function InfoColumn({ product, variants = [], selectedVariantIdx 
 
       {/* Price + rating */}
       <div className="flex items-center gap-3">
-        <div className="text-2xl font-semibold text-gray-900">${ currentVariant?.price ?? product.price }</div>
+        <div className="text-2xl font-semibold text-gray-900">${ currentVariant?.price || 0 }</div>
         <div className="text-sm text-gray-600" aria-label={`Rating ${product.rating} out of 5`}>
           ⭐ {product.rating} • {product.reviewsCount} Reviews
         </div>
@@ -44,14 +44,14 @@ export default function InfoColumn({ product, variants = [], selectedVariantIdx 
             {variants.map((v, idx) => (
               <button
                 key={v.id} type="button" aria-label={`Color ${v.color_name}`}
-                className={`w-6 h-6 rounded-full border ${idx === selectedVariantIdx
+                className={`w-6 h-6 rounded-full border ${idx === variantIndex
                   ? "ring-2 ring-neutral-300 border-neutral-100" : "border-gray-300"}`}
                 style={{ backgroundColor: v.hex_code }} onClick={() => onVariantChange?.(idx)}
                 onKeyDown={(e) => {
                   if (e.key === "ArrowRight")
-                    onVariantChange?.(Math.min(variants.length - 1, selectedVariantIdx + 1));
+                    onVariantChange?.(Math.min(variants.length - 1, variantIndex + 1));
                   if (e.key === "ArrowLeft")
-                    onVariantChange?.(Math.max(0, selectedVariantIdx - 1));
+                    onVariantChange?.(Math.max(0, variantIndex - 1));
                   if (e.key === "Enter" || e.key === " ")
                     onVariantChange?.(idx);
                 }} />
@@ -65,32 +65,32 @@ export default function InfoColumn({ product, variants = [], selectedVariantIdx 
         <div className="text-sm">
           <div
             className="flex flex-wrap gap-2" role="listbox" aria-label="Size options" >
-            {sizes.map((s, idx) => {
-              const disabled = !s.available;
-              const selected = idx === selectedSizeIdx;
+            {sizes.map((size, index) => {
+              const disabled = !size.available;
+              const selected = index === sizeIndex;
 
               return (
                 <button
-                  key={s.label}
+                  key={size.label}
                   type="button"
                   disabled={disabled}
-                  aria-label={`Size ${s.label}${disabled ? " unavailable" : ""}`}
+                  aria-label={`Size ${size.label}${disabled ? " unavailable" : ""}`}
                   aria-pressed={selected}
                   className={`px-3 py-2 border rounded-md ${disabled ? "opacity-40 cursor-not-allowed" : ""
                     } ${selected ? "border-black" : "border-gray-300"}`}
-                  onClick={() => setSelectedSizeIdx(idx)}
+                  onClick={() => setSizeIndex(index)}
                   onKeyDown={(e) => {
                     if (e.key === "ArrowRight" || e.key === "ArrowDown") {
-                      setSelectedSizeIdx((i) =>
+                      setSizeIndex((i) =>
                         Math.min(sizes.length - 1, i + 1)
                       );
                     }
                     if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
-                      setSelectedSizeIdx((i) => Math.max(0, i - 1));
+                      setSizeIndex((i) => Math.max(0, i - 1));
                     }
                   }}
                 >
-                  {s.label}
+                  {size.label}
                 </button>
               );
             })}

@@ -19,14 +19,14 @@ export default function ProductCard({ product }) {
             whileHover={{ y: -2 }}
             transition={{ duration: 0.15 }} >
 
-            <div className="relative h-full rounded-xl overflow-hidden bg-white text-neutral-900 border border-neutral-200 shadow-[0_1px_2px_#0000000a,0_10px_24px_-14px_#00000024] flex flex-col">
+            <div className="relative w-full max-w-[300px] md:max-w-[320px] xl:max-w-[340px] rounded-2xl overflow-hidden bg-neutral-50 text-neutral-900 border border-neutral-200 shadow-[0_1px_2px_#0000000a,0_10px_24px_-14px_#00000024] flex flex-col">
                 {/* Badge */}
                 <div className="absolute top-3 left-3 bg-black/80 text-white font-semibold text-[10px] tracking-wide px-2.5 py-1 rounded">
                     {product.badge}
                 </div>
 
                 {/* Shoe Image */}
-                <Link to={to} aria-label={`View details for ${product.title}`} className="flex justify-center items-center p-6 aspect-[4/3] bg-neutral-50">
+                <Link to={to} aria-label={`View details for ${product.title}`} className="flex justify-center items-center aspect-[4/3] bg-neutral-50 w-full">
                     <ProductImage product={product} variant="desktop" color={selectedColor} />
                 </Link>
 
@@ -43,7 +43,7 @@ export default function ProductCard({ product }) {
                             <button
                                 key={color.id}
                                 style={{ backgroundColor: color.hex_code }}
-                                className={`w-5 h-5 rounded-full border ${selectedColor === color.color_name ? "ring-2 ring-neutral-300 border-neutral-100" : "border-neutral-300"}`}
+                                className={`w-6 h-6 rounded-full border ${selectedColor === color.color_name ? "ring-2 ring-neutral-300 border-neutral-100" : "border-neutral-300"}`}
                                 onClick={(e) => { e.stopPropagation(); setSelectedColor(color.color_name); setSelectedVariant(color)}}
                             />
                         ))}

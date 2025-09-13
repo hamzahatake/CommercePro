@@ -1,3 +1,5 @@
 # Start the frontend + backend using:
 
 docker-compose --profile dev up -d
+
+docker-compose --profile dev up --build -d

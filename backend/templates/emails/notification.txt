@@ -1,0 +1,6 @@
+Hello {{ user_name }},
+
+{{ message_body }}
+
+Thank you,
+The {{ site_name }} Team

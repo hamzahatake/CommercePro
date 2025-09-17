@@ -1,0 +1,25 @@
+#Python/Django
+
+pycache/ *.pyc *.pyo *.pyd *.db *.sqlite3 *.egg-info/ dist/ build/ venv/ env/ .pytest_cache/ *.log
+
+#Django-specific
+
+migrations/ *.local staticfiles/ media/
+
+#Docker
+
+Dockerfile.local *.dockerignore docker-compose.local.yml docker-compose.override.yml *.env *.env.bak .env.local .env.!.env.sample !.env.example
+
+#IDE/Editor
+
+.idea/ .vscode/ *.sublime-project *.sublime-workspace
+
+#OS-specific
+
+.DS_Store Thumbs.db
+
+#Sensitive files
+
+secrets/ *.key *.pem *.crt *.cert
+
+.env

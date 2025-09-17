@@ -1,0 +1,10 @@
+Hello {{ vendor_name }},
+
+Congratulations! Your vendor account has been approved.
+
+You can now log in to your account and start adding products to the store.
+
+Login here: {{ login_url }}
+
+Welcome aboard,
+The {{ site_name }} Team

@@ -1,0 +1,13 @@
+# Start the frontend + backend using:
+
+# Development (Next.js on port 3000, Django on port 8000)
+docker-compose --profile dev up -d
+
+# Rebuild and start development
+docker-compose --profile dev up --build -d
+
+# Production (with nginx proxy on port 80)
+docker-compose --profile prod up -d
+
+# Rebuild and start production
+docker-compose --profile prod up --build -d

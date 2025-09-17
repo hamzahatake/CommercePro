@@ -1,0 +1,14 @@
+<html>
+  <body style="font-family: Arial, sans-serif; color: #333;">
+    <h2>Hello {{ vendor_name }},</h2>
+    <p>Thank you for applying to become a vendor on {{ site_name }}.</p>
+    <p>Unfortunately, your application was not approved at this time.</p>
+    {% if reason %}
+      <p><strong>Reason:</strong> {{ reason }}</p>
+    {% endif %}
+    <p>If you believe this was a mistake or would like more details, please contact us at 
+      <a href="mailto:{{ support_email }}">{{ support_email }}</a>.
+    </p>
+    <p>Best regards,<br>The {{ site_name }} Team</p>
+  </body>
+</html>

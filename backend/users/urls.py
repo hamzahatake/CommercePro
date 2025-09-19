@@ -1,30 +1,26 @@
 from django.urls import path
-from rest_framework.routers import DefaultRouter
 from .views import (
-    VendorRegisterView,
-    UserRegistrationView,
-    CustomTokenObtainPairView,
-    AdminVendorViewSet,
-    UserProfileView,
-    VendorProfileView
+    UserProfileRegistrationView,
+    UserProfileRetrieveUpdateAPIView,
+    CustomerProfileRegistrationView,
+    CustomerProfileRetrieveUpdateAPIView,
+    VendorProfileRegistrationView,
+    VendorProfileRetrieveUpdateAPIView,
+    ManagerProfileRegistrationView,
+    ManagerProfileRetrieveUpdateAPIView,
+    AdminProfileRegistrationView,
+    AdminProfileRetrieveUpdateAPIView
 )
-from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
-    path("users/auth/register/", UserRegistrationView.as_view(), name="customer-register"),
-    path("users/auth/vendor-register/", VendorRegisterView.as_view(), name="vendor-register"),
-    path("users/auth/login/", CustomTokenObtainPairView.as_view(), name="token-obtain-pair"),
-    path("users/auth/token/refresh/", TokenRefreshView.as_view(), name="token-refresh"),
-    path("users/profile/", UserProfileView.as_view(), name="user-profile"),
+    path("users/api/register/user/", UserProfileRegistrationView.as_view(), name="user-register"),
+    path("users/api/profile/user/", UserProfileRetrieveUpdateAPIView.as_view(), name="user-profile"),
+    path("users/api/register/customer/", CustomerProfileRegistrationView.as_view(), name="customer-register"),
+    path("users/api/profile/customer/", CustomerProfileRetrieveUpdateAPIView.as_view(), name="customer-profile"),
+    path("users/api/register/vendor/", VendorProfileRegistrationView.as_view(), name="vendor-register"),
+    path("users/api/profile/vendor/", VendorProfileRetrieveUpdateAPIView.as_view(), name="vendor-profile"),
+    path("users/api/register/manager/", ManagerProfileRegistrationView.as_view(), name="manager-register"),
+    path("users/api/profile/manager/", ManagerProfileRetrieveUpdateAPIView.as_view(), name="manager-profile"),
+    path("users/api/register/admin/", AdminProfileRegistrationView.as_view(), name="admin-register"),
+    path("users/api/profile/admin/", AdminProfileRetrieveUpdateAPIView.as_view(), name="admin-profile"),
 ]
-
-router = DefaultRouter()
-
-# Approve/reject actions are automatically available as PATCH:
-#   /admin/vendors/{id}/approve/
-#   /admin/vendors/{id}/reject/
-router.register("admin/vendors", AdminVendorViewSet, basename="admin-vendors")
-
-router.register("vendor-profiles", VendorProfileView, basename="vendor-profiles")
-
-urlpatterns += router.urls

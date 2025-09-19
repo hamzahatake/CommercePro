@@ -5,8 +5,8 @@ from .validators import pricing_rule, validate_image
 from .utils import product_variant_image_path
 from rest_framework.validators import ValidationError
 
-User = settings.AUTH_USER_MODEL
 
+User = settings.AUTH_USER_MODEL
 
 class Category(models.Model):
     name = models.CharField(max_length=50, unique=True)

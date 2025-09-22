@@ -16,10 +16,15 @@ class CartItemSerializer(serializers.ModelSerializer):
         product = attrs["product"]
         quantity = attrs["quantity"]
 
-        if product.stock < 1:
+        # Check if product is active
+        if not product.is_active:
             raise ValidationError("The product is not available!")
+        
+        # Check product stock
+        if product.stock < 1:
+            raise ValidationError("The product is out of stock!")
         if quantity > product.stock:
-            raise ValidationError("Their's shortage in product stock!")
+            raise ValidationError("There's shortage in product stock!")
         
         return attrs
     

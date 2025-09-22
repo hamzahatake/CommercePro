@@ -10,6 +10,7 @@ class Order(models.Model):
         ("shipped", "Shipped"),
         ("completed", "Completed"),
         ("canceled", "Canceled"),
+        ("failed", "Failed"),
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="orders")
@@ -28,11 +29,13 @@ class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
     product = models.ForeignKey("products.Product", on_delete=models.SET_NULL, null=True)
     vendor = models.ForeignKey("users.VendorProfile", on_delete=models.SET_NULL, null=True)
-    title_snapshot = models.CharField(max_length=255)
-    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
-    quantity = models.PositiveIntegerField()
+    title_snapshot = models.CharField(max_length=255, blank=True)
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    quantity = models.PositiveIntegerField(default=1)
 
     def subtotal(self):
+        if self.unit_price is None or self.quantity is None:
+            return 0
         return self.unit_price * self.quantity
 
     def __str__(self):

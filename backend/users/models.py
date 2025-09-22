@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from .validators import validate_image_size
+from django.utils import timezone
+from datetime import timedelta
 
 
 class User(AbstractUser):
@@ -92,8 +94,6 @@ class EmailVerificationToken(models.Model):
     
     def is_expired(self):
         """Check if token is older than 24 hours"""
-        from django.utils import timezone
-        from datetime import timedelta
         return timezone.now() > self.created_at + timedelta(hours=24)
     
     def use_token(self):
@@ -118,8 +118,6 @@ class PasswordResetToken(models.Model):
     
     def is_expired(self):
         """Check if token is older than 1 hour"""
-        from django.utils import timezone
-        from datetime import timedelta
         return timezone.now() > self.created_at + timedelta(hours=1)
     
     def use_token(self):

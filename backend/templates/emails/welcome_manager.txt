@@ -32,3 +32,4 @@ The {{ site_name }} Admin Team
 ---
 This email was sent to {{ user.email }}
 © 2024 {{ site_name }}. All rights reserved.
+

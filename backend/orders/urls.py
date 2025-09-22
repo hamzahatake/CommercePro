@@ -8,6 +8,7 @@ from .views import (
     VendorOrderListAPIView,
     AdminOrderListAPIView,
     AdminOrderDetailAPIView,
+    CancelOrderAPIView,
 )
 
 urlpatterns = [
@@ -18,6 +19,7 @@ urlpatterns = [
 
     path("", OrderListAPIView.as_view(), name="order-list"),
     path("<int:pk>/", OrderDetailAPIView.as_view(), name="order-detail"),
+    path("<int:order_id>/cancel/", CancelOrderAPIView.as_view(), name="cancel-order"),
 
     path("vendor/orders/", VendorOrderListAPIView.as_view(), name="vendor-order-list"),
 

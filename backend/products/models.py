@@ -23,6 +23,8 @@ class Product(models.Model):
     slug = models.SlugField(blank=True, unique=True)
     description = models.TextField(blank=True)
     base_price = models.DecimalField(max_digits=10, decimal_places=2, validators=[pricing_rule], null=True, blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2, validators=[pricing_rule], null=True, blank=True, help_text="Main product price")
+    stock = models.PositiveIntegerField(default=0, help_text="Total stock across all variants")
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -41,6 +43,21 @@ class Product(models.Model):
         if not self.slug:
             self.slug = slugify(self.title)
         super().save(*args, **kwargs)
+
+    def sync_price_and_stock(self):
+        """Sync price and stock from variants"""
+        # Set price to base_price if not set
+        if not self.price and self.base_price:
+            self.price = self.base_price
+        
+        # Calculate total stock from all variants
+        total_stock = 0
+        for variant in self.variants.all():
+            for size in variant.sizes.all():
+                total_stock += size.stock
+        
+        self.stock = total_stock
+        self.save(update_fields=['stock'])
 
     def __str__(self):
         return f'{self.title} ({self.vendor})'
@@ -68,6 +85,19 @@ class ProductSize(models.Model):
     variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE, related_name='sizes')
     size_label = models.CharField(max_length=10)
     stock = models.PositiveIntegerField(default=0)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Sync product stock when size stock changes
+        if self.variant and self.variant.product:
+            self.variant.product.sync_price_and_stock()
+
+    def delete(self, *args, **kwargs):
+        product = self.variant.product if self.variant else None
+        super().delete(*args, **kwargs)
+        # Sync product stock when size is deleted
+        if product:
+            product.sync_price_and_stock()
 
     def __str__(self):
         return f"{self.variant} - {self.size_label} ({self.stock} in stock)"

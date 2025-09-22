@@ -1,18 +1,22 @@
 from rest_framework import serializers
-from .models import Wishlist, Product
+from .models import Wishlist
+from products.models import Product
 
-class ProductSerializers(serializers.ModelSerializer):
+class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ["id", "title", "price"]
+        fields = ["id", "title", "base_price", "price", "stock", "is_active", "created_at"]
 
 
-class WishlistSerializers(serializers.ModelSerializer):
-    product = ProductSerializers(many=True, read_only=True)
+class WishlistSerializer(serializers.ModelSerializer):
+    product = ProductSerializer(read_only=True)
     product_id = serializers.PrimaryKeyRelatedField(
-        queryset=Product.objects.all(), write_only=True, source="product")
+        queryset=Product.objects.filter(is_active=True), 
+        write_only=True, 
+        source="product"
+    )
 
     class Meta:
         model = Wishlist
-        fields = ["id", "product", "created_at"]
-        read_only_fields = ["id", "customer", "products"]
+        fields = ["id", "product", "product_id", "created_at"]
+        read_only_fields = ["id", "created_at"]

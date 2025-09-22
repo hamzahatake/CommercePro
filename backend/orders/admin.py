@@ -4,11 +4,14 @@ from .models import Order, OrderItem
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
-    readonly_fields = ("product", "title_snapshot", "unit_price", "quantity", "vendor", "subtotal")
+    readonly_fields = ("product", "title_snapshot", "unit_price", "quantity", "vendor", "get_subtotal")
     can_delete = False
 
-    def subtotal(self, obj):
-        return obj.subtotal()
+    def get_subtotal(self, obj):
+        if obj.pk:
+            return obj.subtotal()
+        return "N/A"
+    get_subtotal.short_description = "Subtotal"
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
@@ -20,9 +23,12 @@ class OrderAdmin(admin.ModelAdmin):
 
 @admin.register(OrderItem)
 class OrderItemAdmin(admin.ModelAdmin):
-    list_display = ("id", "order", "product", "title_snapshot", "unit_price", "quantity", "vendor", "subtotal")
+    list_display = ("id", "order", "product", "title_snapshot", "unit_price", "quantity", "vendor", "get_subtotal")
     search_fields = ("product__title", "order__id")
-    readonly_fields = ("order", "product", "title_snapshot", "unit_price", "quantity", "vendor", "subtotal")
+    readonly_fields = ("order", "product", "title_snapshot", "unit_price", "quantity", "vendor", "get_subtotal")
 
-    def subtotal(self, obj):
-        return obj.subtotal()
+    def get_subtotal(self, obj):
+        if obj.pk:
+            return obj.subtotal()
+        return "N/A"
+    get_subtotal.short_description = "Subtotal"

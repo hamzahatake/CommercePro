@@ -18,6 +18,7 @@ from .serializers import (
     ManagerRegistrationSerializer, 
     AdminProfileSerializer,
     AdminRegistrationSerializer,
+
     # New auth serializers
     UserLoginSerializer,
     PasswordResetSerializer,
@@ -35,16 +36,6 @@ User = get_user_model()
 class UserProfileRegistrationView(generics.CreateAPIView):
     permission_classes = [AllowAny]
     serializer_class = UserRegistrationSerializer
-
-    def post(self, request, *args, **kwargs):
-        serializer = UserRegistrationSerializer(data=request.data)
-
-        if serializer.is_valid():
-            user = serializer.save()
-
-
-        if not serializer.is_valid():
-            raise ValidationError("User cannot be registered!")
 
 
 class UserProfileRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):

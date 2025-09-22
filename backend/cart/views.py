@@ -39,6 +39,7 @@ class AddtoCartAPIView(generics.CreateAPIView):
 
         products = get_object_or_404(Product, is_active=True, id=product_id)
 
+        # Check product stock
         if quantity > products.stock:
             return Response({"error": "Not enough stock"}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -76,6 +77,8 @@ class UpdateCartItemAPIView(generics.UpdateAPIView):
         cart_item = self.get_object()
 
         quantity = int(request.data.get("quantity", 1))
+        
+        # Check product stock
         if quantity > cart_item.product.stock:
             return Response({"error": "Exceeds stock"}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -95,8 +98,9 @@ class RemoveFromCartAPIView(generics.DestroyAPIView):
     permission_classes = [IsAuthenticated]
     queryset = CartItem.objects.all()
 
-    def perform_destroy(self, instance):
-
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        
         if instance.cart.user != self.request.user:
             return Response({"error": "Not your cart"}, status=status.HTTP_403_FORBIDDEN)
         
@@ -104,7 +108,7 @@ class RemoveFromCartAPIView(generics.DestroyAPIView):
         instance.delete()
 
         cart_serializer = CartSerializer(cart, context={"request": self.request})
-        return Response(cart_serializer.data, status=status.HTTP_204_NO_CONTENT)
+        return Response(cart_serializer.data, status=status.HTTP_200_OK)
 
 
 

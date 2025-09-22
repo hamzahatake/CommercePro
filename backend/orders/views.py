@@ -1,4 +1,5 @@
 from decimal import Decimal, ROUND_HALF_UP
+import logging
 
 from django.db import transaction
 from django.db.models import F
@@ -14,12 +15,11 @@ import stripe
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.http import HttpResponse
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from django.db import transaction
+
+logger = logging.getLogger(__name__)
 
 from .models import Order, OrderItem
-from .serializers import OrderSerializer
+from .serializers import OrderSerializer, AdminOrderUpdateSerializer
 from cart.models import Cart
 from products.models import Product
 
@@ -33,7 +33,7 @@ class CreatePaymentIntentAPIView(APIView):
         user = request.user
 
         try:
-            cart = user.cart
+            cart = Cart.objects.get(user=user)
         except Cart.DoesNotExist:
             return Response({"error": "Cart is empty"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -80,57 +80,73 @@ class StripeWebhookView(APIView):
         webhook_secret = settings.STRIPE_WEBHOOK_SECRET
 
         if not webhook_secret:
+            logger.error("Stripe webhook secret not configured")
             return HttpResponse(status=400)
 
         # Verify Stripe signature
         try:
             event = stripe.Webhook.construct_event(payload, sig_header, webhook_secret)
-        except ValueError:
+        except ValueError as e:
+            logger.error(f"Invalid payload in webhook: {e}")
             return HttpResponse(status=400) 
-        except stripe.error.SignatureVerificationError:
+        except stripe.error.SignatureVerificationError as e:
+            logger.error(f"Invalid signature in webhook: {e}")
             return HttpResponse(status=400)  
 
+        logger.info(f"Processing webhook event: {event['type']}")
+
         if event["type"] == "payment_intent.succeeded":
-            payment_intent = event["data"]["object"]
-
-            payment_intent_id = payment_intent["id"]
-            client_secret = payment_intent.get("client_secret")
-
-            try:
-                order = Order.objects.get(stripe_payment_intent_id=payment_intent_id)
-            except Order.DoesNotExist:
-                return HttpResponse(status=404)
-
-            # Finalize order
-            with transaction.atomic():
-                if order.status != "paid": 
-                    order.status = "paid"
-                    order.save()
-
-                    try:
-                        cart = Cart.objects.get(user=order.user)
-                        cart.cart_items.all().delete()
-                    except Cart.DoesNotExist:
-                        pass
-
-            return HttpResponse(status=200)
-
+            return self._handle_payment_succeeded(event)
         elif event["type"] in ["payment_intent.payment_failed", "payment_intent.canceled"]:
-            payment_intent = event["data"]["object"]
-            payment_intent_id = payment_intent["id"]
-
-            try:
-                order = Order.objects.get(stripe_payment_intent_id=payment_intent_id)
-                if order.status != "failed":
-                    order.status = "failed"
-                    order.save()
-            except Order.DoesNotExist:
-                pass
-
-            return HttpResponse(status=200)
-
+            return self._handle_payment_failed(event)
         else:
+            logger.info(f"Unhandled webhook event type: {event['type']}")
             return HttpResponse(status=200)
+
+    def _handle_payment_succeeded(self, event):
+        """Handle successful payment webhook"""
+        payment_intent = event["data"]["object"]
+        payment_intent_id = payment_intent["id"]
+
+        try:
+            order = Order.objects.get(stripe_payment_intent_id=payment_intent_id)
+        except Order.DoesNotExist:
+            logger.error(f"Order not found for payment intent: {payment_intent_id}")
+            return HttpResponse(status=404)
+
+        # Finalize order
+        with transaction.atomic():
+            if order.status != "paid": 
+                order.status = "paid"
+                order.save()
+                logger.info(f"Order {order.id} marked as paid")
+
+                # Clear cart if it exists
+                try:
+                    cart = Cart.objects.get(user=order.user)
+                    cart.cart_items.all().delete()
+                    logger.info(f"Cart cleared for user {order.user.id}")
+                except Cart.DoesNotExist:
+                    logger.warning(f"Cart not found for user {order.user.id}")
+
+        return HttpResponse(status=200)
+
+    def _handle_payment_failed(self, event):
+        """Handle failed payment webhook"""
+        payment_intent = event["data"]["object"]
+        payment_intent_id = payment_intent["id"]
+        event_type = event["type"]
+
+        try:
+            order = Order.objects.get(stripe_payment_intent_id=payment_intent_id)
+            if order.status not in ["failed", "canceled"]:
+                order.status = "failed"
+                order.save()
+                logger.info(f"Order {order.id} marked as failed due to {event_type}")
+        except Order.DoesNotExist:
+            logger.error(f"Order not found for payment intent: {payment_intent_id}")
+
+        return HttpResponse(status=200)
 
 
 class CheckoutAPIView(generics.CreateAPIView):
@@ -139,76 +155,100 @@ class CheckoutAPIView(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         user = request.user
+        logger.info(f"Starting checkout process for user {user.id}")
 
         # Frontend can send payment_intent_id to link with Stripe
         payment_intent_id = request.data.get("payment_intent_id")
 
         try:
-            cart = user.cart
+            cart = Cart.objects.get(user=user)
         except Cart.DoesNotExist:
+            logger.warning(f"Cart not found for user {user.id}")
             return Response({"error": "Cart is empty"}, status=status.HTTP_400_BAD_REQUEST)
 
         cart_items_qs = cart.cart_items.select_related("product")
         if not cart_items_qs.exists():
+            logger.warning(f"Empty cart for user {user.id}")
             return Response({"error": "Cart is empty"}, status=status.HTTP_400_BAD_REQUEST)
 
-        with transaction.atomic():
-            product_ids = list(cart_items_qs.values_list("product_id", flat=True))
-            products_map = {
-                p.id: p
-                for p in Product.objects.select_for_update().filter(id__in=product_ids)
-            }
+        try:
+            with transaction.atomic():
+                product_ids = list(cart_items_qs.values_list("product_id", flat=True))
+                products_map = {
+                    p.id: p
+                    for p in Product.objects.select_for_update().filter(id__in=product_ids)
+                }
 
-            # Validate stock
-            for ci in cart_items_qs:
-                product = products_map.get(ci.product_id)
-                if product is None:
-                    raise ValidationError(f"Product unavailable: {ci.id}")
-                if ci.quantity <= 0:
-                    raise ValidationError(f"Invalid quantity for {product.title}")
-                if product.stock < ci.quantity:
-                    raise ValidationError(f"Not enough stock for {product.title}")
+                # Validate stock
+                for ci in cart_items_qs:
+                    product = products_map.get(ci.product_id)
+                    if product is None:
+                        logger.error(f"Product {ci.product_id} not found during checkout")
+                        raise ValidationError(f"Product unavailable: {ci.product_id}")
+                    if ci.quantity <= 0:
+                        logger.error(f"Invalid quantity {ci.quantity} for product {product.title}")
+                        raise ValidationError(f"Invalid quantity for {product.title}")
+                    if product.stock < ci.quantity:
+                        logger.error(f"Insufficient stock for {product.title}: {product.stock} < {ci.quantity}")
+                        raise ValidationError(f"Not enough stock for {product.title}")
 
-            order = Order.objects.create(
-                user=user,
-                status="pending", 
-                total_amount=Decimal("0.00"),
-                currency="USD",
-            )
-
-            if payment_intent_id:
-                order.stripe_payment_intent_id = payment_intent_id
-                order.save(update_fields=["stripe_payment_intent_id"])
-
-            running_total = Decimal("0.00")
-
-            # Add items & reduce stock
-            for ci in cart_items_qs:
-                product = products_map[ci.product_id]
-
-                updated = Product.objects.filter(
-                    id=product.id,
-                    stock__gte=ci.quantity
-                ).update(stock=F("stock") - ci.quantity)
-
-                if updated == 0:
-                    raise ValidationError(f"Not enough stock for {product.title}")
-
-                unit_price = Decimal(product.price).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-                OrderItem.objects.create(
-                    order=order,
-                    product=product,
-                    vendor=getattr(product, "vendor", None),
-                    title_snapshot=product.title,
-                    unit_price=unit_price,
-                    quantity=ci.quantity,
+                order = Order.objects.create(
+                    user=user,
+                    status="pending", 
+                    total_amount=Decimal("0.00"),
+                    currency="USD",
                 )
-                running_total += unit_price * ci.quantity
 
-            order.total_amount = running_total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-            order.save(update_fields=["total_amount", "updated_at"])
+                if payment_intent_id:
+                    order.stripe_payment_intent_id = payment_intent_id
+                    order.save(update_fields=["stripe_payment_intent_id"])
 
-            cart.cart_items.all().delete()
+                running_total = Decimal("0.00")
+
+                # Add items & reduce stock
+                for ci in cart_items_qs:
+                    product = products_map[ci.product_id]
+
+                    updated = Product.objects.filter(
+                        id=product.id,
+                        stock__gte=ci.quantity
+                    ).update(stock=F("stock") - ci.quantity)
+
+                    if updated == 0:
+                        logger.error(f"Stock update failed for {product.title}")
+                        raise ValidationError(f"Not enough stock for {product.title}")
+
+                    unit_price = Decimal(product.price).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                    # Get vendor profile if it exists
+                    vendor_profile = None
+                    if hasattr(product.vendor, 'vendor_profile'):
+                        vendor_profile = product.vendor.vendor_profile
+                    
+                    OrderItem.objects.create(
+                        order=order,
+                        product=product,
+                        vendor=vendor_profile,
+                        title_snapshot=product.title,
+                        unit_price=unit_price,
+                        quantity=ci.quantity,
+                    )
+                    running_total += unit_price * ci.quantity
+
+                order.total_amount = running_total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                order.save(update_fields=["total_amount", "updated_at"])
+
+                cart.cart_items.all().delete()
+                logger.info(f"Order {order.id} created successfully for user {user.id}")
+
+        except ValidationError as e:
+            logger.error(f"Validation error during checkout for user {user.id}: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error during checkout for user {user.id}: {e}")
+            return Response(
+                {"error": "An error occurred during checkout. Please try again."}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
         serializer = OrderSerializer(order)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -247,7 +287,49 @@ class AdminOrderListAPIView(generics.ListAPIView):
 
 
 class AdminOrderDetailAPIView(generics.RetrieveUpdateAPIView):
-    serializer_class = OrderSerializer
     permission_classes = [permissions.IsAdminUser]
-
     queryset = Order.objects.all()
+
+    def get_serializer_class(self):
+        if self.request.method in ['PUT', 'PATCH']:
+            return AdminOrderUpdateSerializer
+        return OrderSerializer
+
+
+class CancelOrderAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, order_id):
+        """Cancel an order if it's still pending"""
+        try:
+            order = Order.objects.get(id=order_id, user=request.user)
+        except Order.DoesNotExist:
+            return Response(
+                {"error": "Order not found"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        if order.status not in ["pending", "paid"]:
+            return Response(
+                {"error": f"Cannot cancel order with status: {order.status}"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        with transaction.atomic():
+            # Restore stock if order was paid
+            if order.status == "paid":
+                for item in order.items.all():
+                    if item.product:
+                        Product.objects.filter(id=item.product.id).update(
+                            stock=F("stock") + item.quantity
+                        )
+                        logger.info(f"Restored {item.quantity} units of {item.product.title} to stock")
+
+            order.status = "canceled"
+            order.save()
+            logger.info(f"Order {order.id} canceled by user {request.user.id}")
+
+        return Response(
+            {"message": "Order canceled successfully", "order_id": order.id},
+            status=status.HTTP_200_OK
+        )

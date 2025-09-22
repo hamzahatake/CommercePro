@@ -33,3 +33,4 @@ The {{ site_name }} System Team
 ---
 This email was sent to {{ user.email }}
 © 2024 {{ site_name }}. All rights reserved.
+

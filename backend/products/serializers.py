@@ -83,6 +83,8 @@ class BaseProductSerializer(serializers.ModelSerializer):
             "slug",
             "description",
             "base_price",
+            "price",
+            "stock",
             "category",
             "variants",
             "created_at"
@@ -100,7 +102,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "updated_at",
             "media_sections",
         ] 
-        read_only_fields = ["id", "vendor", "slug", "created_at", "updated_at"]
+        read_only_fields = ["id", "vendor", "slug", "created_at", "updated_at", "stock"]
 
     def validate_base_price(self, value):
         if value <= 0:
@@ -122,6 +124,8 @@ class ProductPublicSerializer(serializers.ModelSerializer):
             "slug",
             "description",
             "base_price",
+            "price",
+            "stock",
             "category",
             "variants",
             "created_at",

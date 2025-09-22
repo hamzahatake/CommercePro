@@ -37,9 +37,9 @@ class VendorProductViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if getattr(user, "is_superuser", False) or getattr(user, "role", None) == "admin":
+        if user.is_superuser or user.role == "admin":
             return Product.objects.all()
-        if getattr(user, "role", None) == "vendor":
+        if user.role == "vendor":
             return Product.objects.filter(vendor=user)
         return Product.objects.none()
 
@@ -93,9 +93,9 @@ class ProductVariantViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if getattr(user, "is_superuser", False) or getattr(user, "role", None) == "admin":
+        if user.is_superuser or user.role == "admin":
             return ProductVariant.objects.all()
-        if getattr(user, "role", None) == "vendor":
+        if user.role == "vendor":
             return ProductVariant.objects.filter(product__vendor=user)
         return ProductVariant.objects.none()
 
@@ -111,9 +111,9 @@ class ProductSizeViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if getattr(user, "is_superuser", False) or getattr(user, "role", None) == "admin":
+        if user.is_superuser or user.role == "admin":
             return ProductSize.objects.all()
-        if getattr(user, "role", None) == "vendor":
+        if user.role == "vendor":
             return ProductSize.objects.filter(variant__product__vendor=user)
         return ProductSize.objects.none()
 
@@ -124,8 +124,8 @@ class ProductImageViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if getattr(user, "is_superuser", False) or getattr(user, "role", None) == "admin":
+        if user.is_superuser or user.role == "admin":
             return ProductImage.objects.all()
-        if getattr(user, "role", None) == "vendor":
+        if user.role == "vendor":
             return ProductImage.objects.filter(variant__product__vendor=user)
         return ProductImage.objects.none()

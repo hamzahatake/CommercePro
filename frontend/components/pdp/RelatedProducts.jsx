@@ -1,5 +1,5 @@
 import React from "react";
-import ProductCard from "../../components/ProductCard";
+import ProductCard from "../products/ProductCard";
 
 export default function RelatedProducts({ relatedProducts = [] }) {
   return (

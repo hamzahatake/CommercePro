@@ -16,6 +16,11 @@ class UserRegistrationSerializer(BaseUserSerializer):
     class Meta:
         model = User
 
+    def validate(self, attrs):
+        if attrs["username"] and attrs["password"]:
+            return
+        
+    def validate_d
 
 class CustomerProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)

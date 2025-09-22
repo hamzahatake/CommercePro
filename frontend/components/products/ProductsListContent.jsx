@@ -4,7 +4,7 @@ import { useGetProductsQuery } from "@/features/api/apiSlice";
 import { useQueryParams } from "@/utils/useQueryParams";
 import ShoeLoader from "@/components/ShoeLoader";
 import ShoeNotAvailable from "@/components/ShoeNotAvailable";
-import ProductCard from "@/components/ProductCard";
+import ProductCard from "@/components/products/ProductCard";
 import Pagination from "@/components/Pagination";
 import FilterPanel from "@/components/FilterPanel";
 import { SneakerBanner } from "@/components/SneakersHero";

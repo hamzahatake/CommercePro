@@ -1,6 +1,6 @@
 "use client";
 
-import CatalogCard from "@/components/CatalogCard";
+import CatalogCard from "@/components/catalog/CatalogCard";
 
 const catalogs = [
   { image: "/Catalog/BestSellers.webp", alt: "Best Sellers Collection" },

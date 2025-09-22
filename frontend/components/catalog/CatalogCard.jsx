@@ -2,7 +2,7 @@
 
 import { motion as Motion } from "framer-motion";
 import { useState } from "react";
-import CatalogImage from "./CatalogImage";
+import CatalogImage from "@/components/catalog/CatalogImage";
 
 export default function CatalogCard({ image, alt }) {
     const [hoveredDesktop, setHoveredDesktop] = useState(false);

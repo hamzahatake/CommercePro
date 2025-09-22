@@ -23,13 +23,7 @@ class Product(models.Model):
     slug = models.SlugField(blank=True, unique=True)
     description = models.TextField(blank=True)
     base_price = models.DecimalField(max_digits=10, decimal_places=2, validators=[pricing_rule], null=True, blank=True)
-    category = models.ForeignKey(
-        Category,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='products'
-    )
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -63,18 +57,8 @@ class ProductVariant(models.Model):
 
 
 class ProductImage(models.Model):
-    variant = models.ForeignKey(
-        ProductVariant,
-        on_delete=models.CASCADE,
-        related_name='images',
-        null=True,  
-        blank=True,
-    )
-
-    image = models.ImageField(
-        upload_to=product_variant_image_path,
-        validators=[validate_image]
-    )
+    variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE, related_name='images', null=True, blank=True,)
+    image = models.ImageField(upload_to=product_variant_image_path, validators=[validate_image])
 
     def __str__(self):
         return f"Image for {self.variant}"
@@ -87,7 +71,7 @@ class ProductSize(models.Model):
 
     def __str__(self):
         return f"{self.variant} - {self.size_label} ({self.stock} in stock)"
-    
+
 
 class ProductMediaSection(models.Model):
     SECTION_TYPES = [
@@ -117,9 +101,7 @@ class ProductMediaItem(models.Model):
 
     section = models.ForeignKey(ProductMediaSection, on_delete=models.CASCADE, related_name="items")
     item_type = models.CharField(max_length=10, choices=ITEM_TYPES)
-    image = models.ImageField(
-        upload_to="products/media/", 
-        blank=True, null=True, validators=[validate_image])
+    image = models.ImageField(upload_to="products/media/", blank=True, null=True, validators=[validate_image])
     video_url = models.URLField(blank=True, null=True, help_text="External video link")
     text = models.CharField(max_length=255, blank=True, null=True)
     order = models.PositiveIntegerField(default=0)

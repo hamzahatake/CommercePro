@@ -70,13 +70,9 @@ class ProductMediaSectionSerializer(serializers.ModelSerializer):
         read_only = fields
 
 
-class ProductSerializer(serializers.ModelSerializer):
+class BaseProductSerializer(serializers.ModelSerializer):
+    category = CategorySerializer(many=True, read_only=True)
     variants = ProductVariantSerializer(many=True, read_only=True)
-    category = CategorySerializer(read_only=True)
-    category_id = serializers.IntegerField(
-        write_only=True, required=False, allow_null=True
-    )
-    media_sections = ProductMediaSectionSerializer(many=True, read_only=True)
 
     class Meta:
         model = Product
@@ -88,13 +84,22 @@ class ProductSerializer(serializers.ModelSerializer):
             "description",
             "base_price",
             "category",
+            "variants",
+            "created_at"
+        ]
+
+
+class ProductSerializer(serializers.ModelSerializer):
+    category_id = serializers.IntegerField(write_only=True, required=False, allow_null=True)
+    media_sections = ProductMediaSectionSerializer(many=True, read_only=True)
+
+    class Meta(BaseProductSerializer):
+        fields = BaseProductSerializer.Meta.fields + [
             "category_id",
             "is_active",
-            "created_at",
             "updated_at",
-            "variants",
             "media_sections",
-        ]
+        ] 
         read_only_fields = ["id", "vendor", "slug", "created_at", "updated_at"]
 
     def validate_base_price(self, value):
@@ -102,26 +107,13 @@ class ProductSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Price must be positive.")
         return value
     
-    
-
 
 class ProductPublicSerializer(serializers.ModelSerializer):
-    category = CategorySerializer(read_only=True)
     vendor_name = serializers.CharField(source="vendor.username", read_only=True)
-    variants = ProductVariantSerializer(many=True, read_only=True)
 
-    class Meta:
+    class Meta(BaseProductSerializer):
         model = Product
-        fields = [
-            "id",
-            "badge",
-            "title",
-            "slug",
-            "description",
-            "base_price",
-            "category",
+        fields = BaseProductSerializer.Meta.fields + [
             "vendor_name",
-            "created_at",
-            "variants",
         ]
         read_only_fields = fields

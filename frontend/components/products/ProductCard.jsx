@@ -1,7 +1,7 @@
 "use client";
 
 import { motion as Motion } from "framer-motion";
-import ProductImage from "./ProductImage";
+import ProductImage from "@/components/products/ProductImage";
 import { useState } from "react";
 import Link from "next/link";
 

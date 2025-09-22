@@ -1,5 +1,5 @@
 import VideoHero from "@/components/VideoHero";
-import CatalogGrid from "@/components/CatalogGrid";
+import CatalogGrid from "@/components/catalog/CatalogGrid";
 
 export default function HomePageContent() {
     return (

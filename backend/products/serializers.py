@@ -110,10 +110,21 @@ class ProductSerializer(serializers.ModelSerializer):
 
 class ProductPublicSerializer(serializers.ModelSerializer):
     vendor_name = serializers.CharField(source="vendor.username", read_only=True)
+    category = CategorySerializer(read_only=True)
+    variants = ProductVariantSerializer(many=True, read_only=True)
 
-    class Meta(BaseProductSerializer):
+    class Meta:
         model = Product
-        fields = BaseProductSerializer.Meta.fields + [
+        fields = [
+            "id",
+            "badge",
+            "title",
+            "slug",
+            "description",
+            "base_price",
+            "category",
+            "variants",
+            "created_at",
             "vendor_name",
         ]
         read_only_fields = fields

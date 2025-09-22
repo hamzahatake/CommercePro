@@ -1,0 +1,25 @@
+Welcome to {{ site_name }}!
+
+Hello {{ user.first_name|default:user.username }},
+
+Congratulations! Your email has been verified and your {{ site_name }} account is now active. You can now start exploring our platform and enjoy all the features we have to offer.
+
+What you can do now:
+- Browse our extensive product catalog
+- Add items to your wishlist
+- Make secure purchases
+- Track your orders
+- Manage your profile
+
+Start shopping: {{ login_url }}
+
+If you have any questions or need assistance, please don't hesitate to contact our support team.
+
+Thank you for choosing {{ site_name }}!
+
+Best regards,
+The {{ site_name }} Team
+
+---
+This email was sent to {{ user.email }}
+© 2024 {{ site_name }}. All rights reserved.

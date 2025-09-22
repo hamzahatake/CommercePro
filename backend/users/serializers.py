@@ -1,8 +1,13 @@
 from rest_framework import serializers
-from .models import User, VendorProfile
-from django.contrib.auth import get_user_model
+from .models import User, VendorProfile, EmailVerificationToken, PasswordResetToken
+from django.contrib.auth import get_user_model, authenticate
+from rest_framework.validators import ValidationError
 from .models import User, CustomerProfile, VendorProfile, ManagerProfile, AdminProfile
 from core.serializers.base import BaseUserSerializer
+from django.contrib.auth.password_validation import validate_password
+from django.utils.crypto import get_random_string
+from .emails import send_verification_email, send_password_reset_email
+from .tasks import send_verification_email_task, send_password_reset_email_task, send_welcome_email_task_new
 
 User= get_user_model()
 
@@ -16,11 +21,6 @@ class UserRegistrationSerializer(BaseUserSerializer):
     class Meta:
         model = User
 
-    def validate(self, attrs):
-        if attrs["username"] and attrs["password"]:
-            return
-        
-    def validate_d
 
 class CustomerProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
@@ -170,3 +170,179 @@ class AdminRegistrationSerializer(BaseUserSerializer):
 
         AdminProfile.objects.create(user=user, **profile_data)
         return user
+
+
+# Authentication Serializers
+class UserRegistrationSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, validators=[validate_password])
+    password_confirm = serializers.CharField(write_only=True)
+    
+    class Meta:
+        model = User
+        fields = ['email', 'username', 'first_name', 'last_name', 'password', 'password_confirm', 'role']
+        extra_kwargs = {
+            'email': {'required': True},
+            'username': {'required': True},
+            'first_name': {'required': True},
+            'last_name': {'required': True},
+        }
+    
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return value
+    
+    def validate_username(self, value):
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError("A user with this username already exists.")
+        return value
+    
+    def validate(self, attrs):
+        if attrs['password'] != attrs['password_confirm']:
+            raise serializers.ValidationError("Passwords don't match.")
+        return attrs
+    
+    def create(self, validated_data):
+        validated_data.pop('password_confirm')
+        user = User.objects.create_user(
+            email=validated_data['email'],
+            username=validated_data['username'],
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name'],
+            password=validated_data['password'],
+            role=validated_data.get('role', 'customer'),
+            is_active=False  
+        )
+        
+        send_verification_email_task.delay(user.id)
+        
+        return user
+
+
+class UserLoginSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField()
+    
+    def validate(self, attrs):
+        email = attrs.get('email')
+        password = attrs.get('password')
+        
+        if email and password:
+            user = authenticate(username=email, password=password)
+            if not user:
+                raise serializers.ValidationError('Invalid credentials.')
+            if not user.is_active:
+                raise serializers.ValidationError('Please verify your email before logging in.')
+            attrs['user'] = user
+            return attrs
+        else:
+            raise serializers.ValidationError('Must include email and password.')
+
+
+class PasswordResetSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    
+    def validate_email(self, value):
+        try:
+            user = User.objects.get(email=value)
+            return value
+        except User.DoesNotExist:
+            return value
+    
+    def save(self):
+        email = self.validated_data['email']
+        try:
+            user = User.objects.get(email=email)
+            send_password_reset_email_task.delay(user.id)
+        except User.DoesNotExist:
+            pass
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    token = serializers.CharField()
+    new_password = serializers.CharField(validators=[validate_password])
+    new_password_confirm = serializers.CharField()
+    
+    def validate(self, attrs):
+        if attrs['new_password'] != attrs['new_password_confirm']:
+            raise serializers.ValidationError("Passwords don't match.")
+        return attrs
+    
+    def validate_token(self, value):
+        try:
+            token = PasswordResetToken.objects.get(token=value)
+            if token.is_used:
+                raise serializers.ValidationError("This reset link has already been used.")
+            if token.is_expired():
+                raise serializers.ValidationError("This reset link has expired.")
+            return value
+        except PasswordResetToken.DoesNotExist:
+            raise serializers.ValidationError("Invalid reset link.")
+    
+    def save(self):
+        token = self.validated_data['token']
+        new_password = self.validated_data['new_password']
+        
+        reset_token = PasswordResetToken.objects.get(token=token)
+        user = reset_token.user
+        user.set_password(new_password)
+        user.save()
+        reset_token.use_token()
+        
+        return user
+
+
+class EmailVerificationSerializer(serializers.Serializer):
+    token = serializers.CharField()
+    
+    def validate_token(self, value):
+        try:
+            token = EmailVerificationToken.objects.get(token=value)
+            if token.is_used:
+                raise serializers.ValidationError("This verification link has already been used.")
+            if token.is_expired():
+                raise serializers.ValidationError("This verification link has expired.")
+            return value
+        except EmailVerificationToken.DoesNotExist:
+            raise serializers.ValidationError("Invalid verification link.")
+    
+    def save(self):
+        token = self.validated_data['token']
+        verification_token = EmailVerificationToken.objects.get(token=token)
+        verification_token.use_token()
+        
+        # Send welcome email
+        send_welcome_email_task_new.delay(verification_token.user.id)
+        
+        return verification_token.user
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField()
+    new_password = serializers.CharField(validators=[validate_password])
+    new_password_confirm = serializers.CharField()
+    
+    def validate_old_password(self, value):
+        user = self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError("Old password is incorrect.")
+        return value
+    
+    def validate(self, attrs):
+        if attrs['new_password'] != attrs['new_password_confirm']:
+            raise serializers.ValidationError("Passwords don't match.")
+        return attrs
+    
+    def save(self):
+        user = self.context['request'].user
+        new_password = self.validated_data['new_password']
+        user.set_password(new_password)
+        user.save()
+        return user
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'username', 'first_name', 'last_name', 'role', 'is_active', 'date_joined']
+        read_only_fields = ['id', 'email', 'role', 'is_active', 'date_joined']

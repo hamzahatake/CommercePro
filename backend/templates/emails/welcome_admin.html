@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to {{ site_name }} Admin Panel!</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #dc3545;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+        .content {
+            background-color: #f9f9f9;
+            padding: 30px;
+            border-radius: 0 0 8px 8px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #dc3545;
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            font-size: 14px;
+        }
+        .features {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .highlight {
+            background-color: #f8d7da;
+            padding: 15px;
+            border-left: 4px solid #dc3545;
+            margin: 20px 0;
+        }
+        .warning {
+            background-color: #fff3cd;
+            padding: 15px;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Welcome to {{ site_name }} Admin Panel!</h1>
+        <p>Full System Access Granted</p>
+    </div>
+    
+    <div class="content">
+        <h2>Hello {{ user.first_name|default:user.username }}! 👑</h2>
+        
+        <p>Welcome to the {{ site_name }} admin team! Your account has been activated with full administrative privileges. You now have complete access to all system functions and configurations.</p>
+        
+        <div class="highlight">
+            <strong>🔐 Access Level:</strong> {{ user.admin_profile.access_level|default:"Admin" }}
+            <br><strong>⚡ Permissions:</strong> Full System Access
+        </div>
+        
+        <div class="warning">
+            <strong>⚠️ Important:</strong> With great power comes great responsibility. Please use your admin privileges carefully and follow all security protocols.
+        </div>
+        
+        <div class="features">
+            <h3>Admin Panel Features:</h3>
+            <ul>
+                <li>👥 <strong>User Management</strong> - Manage all users, roles, and permissions</li>
+                <li>🏪 <strong>Vendor Oversight</strong> - Approve, suspend, or manage vendor accounts</li>
+                <li>📊 <strong>System Analytics</strong> - Access comprehensive platform metrics</li>
+                <li>⚙️ <strong>System Configuration</strong> - Modify platform settings and features</li>
+                <li>🔒 <strong>Security Management</strong> - Monitor security logs and access controls</li>
+                <li>📈 <strong>Performance Monitoring</strong> - Track system performance and health</li>
+                <li>💰 <strong>Financial Oversight</strong> - Monitor transactions and payouts</li>
+                <li>📋 <strong>Content Management</strong> - Manage products, categories, and content</li>
+                <li>🔍 <strong>Audit Trails</strong> - Review all system activities and changes</li>
+                <li>📧 <strong>Communication Tools</strong> - Send announcements and notifications</li>
+            </ul>
+        </div>
+        
+        <div style="text-align: center;">
+            <a href="{{ admin_dashboard_url }}" class="button">Access Admin Panel</a>
+        </div>
+        
+        <p><strong>Security Guidelines:</strong> Please review our <a href="{{ admin_security_guide_url }}">Admin Security Guide</a> to understand best practices and security protocols.</p>
+        
+        <p><strong>Need Help?</strong> Contact the system administrator at <a href="mailto:{{ super_admin_email }}">{{ super_admin_email }}</a> for technical support.</p>
+        
+        <p>Welcome to the admin team!<br>The {{ site_name }} System Team</p>
+    </div>
+    
+    <div class="footer">
+        <p>This email was sent to {{ user.email }}</p>
+        <p>&copy; 2024 {{ site_name }}. All rights reserved.</p>
+    </div>
+</body>
+</html>

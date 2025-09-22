@@ -1,0 +1,33 @@
+Welcome to {{ site_name }} Vendor Platform! - Start Selling Your Products Today
+
+Hello {{ user.first_name|default:user.username }}! 🏪
+
+Congratulations! Your vendor account has been approved and you're now part of the {{ site_name }} marketplace. Get ready to reach thousands of customers and grow your business.
+
+🚀 Quick Start: Complete your vendor profile and upload your first product to start selling immediately!
+
+Next Steps to Get Started:
+1. Complete Your Profile - Add business information and logo
+2. Set Up Payment - Configure your bank account for payouts
+3. Upload Products - Add your first product with images and descriptions
+4. Set Pricing - Configure your pricing and inventory
+5. Go Live - Your products will be visible to customers
+
+Vendor Dashboard Features:
+📊 Sales Analytics - Track your performance and revenue
+📦 Inventory Management - Manage stock levels and variants
+📸 Product Gallery - Upload multiple images per product
+💰 Payout Tracking - Monitor your earnings and payments
+📈 Performance Metrics - View sales trends and customer feedback
+🎯 Marketing Tools - Promote your products and run campaigns
+
+Access Vendor Dashboard: {{ vendor_dashboard_url }}
+
+Need Help? Check out our Vendor Guide or contact our vendor support team at {{ vendor_support_email }}
+
+Welcome to the {{ site_name }} family!
+The {{ site_name }} Vendor Team
+
+---
+This email was sent to {{ user.email }}
+© 2024 {{ site_name }}. All rights reserved.

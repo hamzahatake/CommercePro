@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to {{ site_name }} Management Dashboard!</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #6f42c1;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+        .content {
+            background-color: #f9f9f9;
+            padding: 30px;
+            border-radius: 0 0 8px 8px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #6f42c1;
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            font-size: 14px;
+        }
+        .features {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .highlight {
+            background-color: #f3e5f5;
+            padding: 15px;
+            border-left: 4px solid #6f42c1;
+            margin: 20px 0;
+        }
+        .department {
+            background-color: #e8eaf6;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Welcome to {{ site_name }} Management Dashboard!</h1>
+        <p>Your Management Journey Begins</p>
+    </div>
+    
+    <div class="content">
+        <h2>Hello {{ user.first_name|default:user.username }}! 👨‍💼</h2>
+        
+        <p>Welcome to the {{ site_name }} management team! Your account has been activated and you now have access to powerful management tools to help oversee our platform operations.</p>
+        
+        <div class="highlight">
+            <strong>🎯 Your Role:</strong> {{ user.manager_profile.department|default:"Management" }} Manager
+            <br><strong>📊 Access Level:</strong> {{ user.manager_profile.permissions_level|default:"Basic" }}
+        </div>
+        
+        <div class="department">
+            <h3>🏢 Department: {{ user.manager_profile.department|default:"Management" }}</h3>
+            <p>You'll be managing operations in the {{ user.manager_profile.department|default:"Management" }} department, overseeing day-to-day activities and ensuring smooth platform operations.</p>
+        </div>
+        
+        <div class="features">
+            <h3>Management Dashboard Features:</h3>
+            <ul>
+                <li>👥 <strong>Vendor Management</strong> - Review and approve vendor applications</li>
+                <li>📊 <strong>Analytics & Reports</strong> - View platform performance metrics</li>
+                <li>🛒 <strong>Order Management</strong> - Monitor and manage customer orders</li>
+                <li>💬 <strong>Customer Support</strong> - Handle customer inquiries and issues</li>
+                <li>📈 <strong>Performance Tracking</strong> - Monitor KPIs and department goals</li>
+                <li>⚙️ <strong>System Configuration</strong> - Manage platform settings and features</li>
+                <li>📋 <strong>Task Management</strong> - Assign and track team tasks</li>
+                <li>🔍 <strong>Audit Logs</strong> - Review system activities and changes</li>
+            </ul>
+        </div>
+        
+        <div style="text-align: center;">
+            <a href="{{ management_dashboard_url }}" class="button">Access Management Dashboard</a>
+        </div>
+        
+        <p><strong>Getting Started:</strong> Check out our <a href="{{ management_guide_url }}">Management Guide</a> to learn about your specific responsibilities and available tools.</p>
+        
+        <p><strong>Need Support?</strong> Contact our admin team at <a href="mailto:{{ admin_support_email }}">{{ admin_support_email }}</a> for any questions or assistance.</p>
+        
+        <p>Welcome to the management team!<br>The {{ site_name }} Admin Team</p>
+    </div>
+    
+    <div class="footer">
+        <p>This email was sent to {{ user.email }}</p>
+        <p>&copy; 2024 {{ site_name }}. All rights reserved.</p>
+    </div>
+</body>
+</html>

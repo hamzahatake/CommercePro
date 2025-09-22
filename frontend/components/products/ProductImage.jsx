@@ -12,7 +12,9 @@ export default function ProductImage({ product, color, variant = "desktop" }) {
         : null;
 
     const imageSrc =
-        (Array.isArray(selectedVariant?.images) && selectedVariant.images[0]?.image_url) || (product?.main_image_url || "");
+        (Array.isArray(selectedVariant?.images) && selectedVariant.images[0]?.url) || 
+        (Array.isArray(firstVariant?.images) && firstVariant.images[0]?.url) || 
+        (product?.main_image_url || "");
 
     const altText = product?.title || "Product image";
 

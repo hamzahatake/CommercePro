@@ -17,13 +17,13 @@ export const normalizeProduct = (p) => {
                 stock: s.stock,
             })),
             images: (v.images || []).map((im, idx) => ({
-                url: im.image || im.image_url || im.url,
+                url: im.image_url || im.image || im.url,
                 alt: `${p.title || "Product"} - ${v.color_name} - ${idx + 1}`,
             })),
         }))
         : [];
 
-    return {
+    const normalized = {
         id: p.id || "",
         title: p.title || "",
         slug: p.slug || "",
@@ -50,4 +50,16 @@ export const normalizeProduct = (p) => {
             })),
         })),
     };
+
+    // Debug logging
+    console.log('NormalizeProduct Debug:', {
+        productTitle: p.title,
+        variantsCount: variants.length,
+        firstVariantImages: variants[0]?.images?.length,
+        firstImageUrl: variants[0]?.images?.[0]?.url,
+        normalizedVariants: normalized.variants.length,
+        normalizedFirstVariantImages: normalized.variants[0]?.images?.length
+    });
+
+    return normalized;
 };

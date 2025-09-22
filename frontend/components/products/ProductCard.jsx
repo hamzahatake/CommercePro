@@ -10,7 +10,7 @@ export default function ProductCard({ product }) {
     const [selectedVariant, setSelectedVariant] = useState(null)
     const slug = product?.slug || product?.id;
     const to = `/products/${slug}`;
-    const displayPrice = selectedVariant?.price_override ? selectedVariant.price_override : product.base_price;
+    const displayPrice = selectedVariant?.price ?? product.price;
 
     return (
         <Motion.div

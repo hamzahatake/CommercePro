@@ -109,6 +109,10 @@ export const apiSlice = createApi({
         const query = formatQueryParams({ page, search, category, ordering });
         return `products/${query}`;
       },
+      transformResponse: (response) => ({
+        ...response,
+        results: response.results.map(product => normalizeProduct(product))
+      }),
       providesTags: ['Product'],
     }),
 

@@ -1,0 +1,26 @@
+Welcome to {{ site_name }}! - Your Shopping Journey Starts Here
+
+Hello {{ user.first_name|default:user.username }}! 🛍️
+
+Welcome to {{ site_name }}! We're thrilled to have you as our valued customer. Your account is now active and ready for an amazing shopping experience.
+
+🎉 Special Offer: As a new customer, enjoy 10% off your first order! Use code WELCOME10 at checkout.
+
+What you can do now:
+🛒 Browse thousands of products from top brands
+❤️ Create wishlists and save your favorite items
+🔍 Search and filter products by category, price, and more
+📱 Track your orders in real-time
+💳 Secure checkout with multiple payment options
+📧 Get notifications about sales and new arrivals
+
+Start shopping: {{ login_url }}
+
+Need help getting started? Check out our Customer Guide or contact our friendly support team.
+
+Happy shopping!
+The {{ site_name }} Team
+
+---
+This email was sent to {{ user.email }}
+© 2024 {{ site_name }}. All rights reserved.

@@ -192,3 +192,13 @@ EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "False") == "True"
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "no-reply@example.com")
+
+# Email verification settings
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+SITE_NAME = os.getenv("SITE_NAME", "Commerce Pro")
+SUPPORT_EMAIL = os.getenv("SUPPORT_EMAIL", "support@example.com")
+
+# Role-specific email settings
+VENDOR_SUPPORT_EMAIL = os.getenv("VENDOR_SUPPORT_EMAIL", "vendor-support@example.com")
+ADMIN_SUPPORT_EMAIL = os.getenv("ADMIN_SUPPORT_EMAIL", "admin-support@example.com")
+SUPER_ADMIN_EMAIL = os.getenv("SUPER_ADMIN_EMAIL", "super-admin@example.com")

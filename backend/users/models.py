@@ -76,3 +76,53 @@ class AdminProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="admin_profile")
     access_level = models.CharField(choices=AccessLevel.choices, blank=True, null=True, default=AccessLevel.ADMIN)
     notes = models.TextField(blank=True, null=True)
+
+
+class EmailVerificationToken(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="email_verification_tokens")
+    token = models.CharField(max_length=64, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_used = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"Email verification for {self.user.email}"
+    
+    def is_expired(self):
+        """Check if token is older than 24 hours"""
+        from django.utils import timezone
+        from datetime import timedelta
+        return timezone.now() > self.created_at + timedelta(hours=24)
+    
+    def use_token(self):
+        """Mark token as used and activate user"""
+        self.is_used = True
+        self.user.is_active = True
+        self.user.save()
+        self.save()
+
+
+class PasswordResetToken(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="password_reset_tokens")
+    token = models.CharField(max_length=64, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_used = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"Password reset for {self.user.email}"
+    
+    def is_expired(self):
+        """Check if token is older than 1 hour"""
+        from django.utils import timezone
+        from datetime import timedelta
+        return timezone.now() > self.created_at + timedelta(hours=1)
+    
+    def use_token(self):
+        """Mark token as used"""
+        self.is_used = True
+        self.save()

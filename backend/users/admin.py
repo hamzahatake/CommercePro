@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, CustomerProfile, VendorProfile, ManagerProfile, AdminProfile
+from .models import User, CustomerProfile, VendorProfile, ManagerProfile, AdminProfile, EmailVerificationToken, PasswordResetToken
 
 class VendorProfileInline(admin.StackedInline):
     model = VendorProfile
@@ -63,3 +63,39 @@ class UserProfileAdmin(UserAdmin):
         if obj and obj.role == "admin":
             return [AdminProfileInline]
         return []
+
+
+@admin.register(EmailVerificationToken)
+class EmailVerificationTokenAdmin(admin.ModelAdmin):
+    list_display = ['user', 'token_short', 'is_used', 'is_expired', 'created_at']
+    list_filter = ['is_used', 'created_at']
+    search_fields = ['user__email', 'user__username', 'token']
+    readonly_fields = ['token', 'created_at']
+    ordering = ['-created_at']
+    
+    def token_short(self, obj):
+        return f"{obj.token[:8]}..." if obj.token else "No token"
+    token_short.short_description = "Token"
+    
+    def is_expired(self, obj):
+        return obj.is_expired()
+    is_expired.boolean = True
+    is_expired.short_description = "Expired"
+
+
+@admin.register(PasswordResetToken)
+class PasswordResetTokenAdmin(admin.ModelAdmin):
+    list_display = ['user', 'token_short', 'is_used', 'is_expired', 'created_at']
+    list_filter = ['is_used', 'created_at']
+    search_fields = ['user__email', 'user__username', 'token']
+    readonly_fields = ['token', 'created_at']
+    ordering = ['-created_at']
+    
+    def token_short(self, obj):
+        return f"{obj.token[:8]}..." if obj.token else "No token"
+    token_short.short_description = "Token"
+    
+    def is_expired(self, obj):
+        return obj.is_expired()
+    is_expired.boolean = True
+    is_expired.short_description = "Expired"

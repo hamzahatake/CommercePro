@@ -42,7 +42,6 @@ function Navbar() {
     <nav className="fixed top-2 z-50 w-full">
 
       {isLoading && <p>Loading...</p>}
-      {isError && <p>Error... Retry</p>}
 
       <div className="mx-auto max-w-[1400px] h-[40px] bg-white text-[#212121] rounded-2xl px-4 md:px-6">
         <div className="h-10 flex items-center justify-between gap-4">

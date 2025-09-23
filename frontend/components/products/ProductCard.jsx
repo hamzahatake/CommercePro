@@ -7,10 +7,14 @@ import Link from "next/link";
 
 export default function ProductCard({ product }) {
     const [selectedColor, setSelectedColor] = useState(product?.variants?.[0]?.color_name || "");
-    const [selectedVariant, setSelectedVariant] = useState(null)
+    const [selectedVariant, setSelectedVariant] = useState(null);
+    const [showAllColors, setShowAllColors] = useState(false);
     const slug = product?.slug || product?.id;
     const to = `/products/${slug}`;
     const displayPrice = selectedVariant?.price ?? product.price;
+    
+    const colorsToShow = showAllColors ? product.variants : product.variants.slice(0, 4);
+    const hasMoreColors = product.variants.length > 4;
 
     return (
         <Motion.div
@@ -24,7 +28,7 @@ export default function ProductCard({ product }) {
                     {product.badge}
                 </div>
 
-                {/* Shoe Image */}
+                {/* Image */}
                 <Link href={to} aria-label={`View details for ${product.title}`} className="flex justify-center items-center aspect-[4/3] bg-neutral-50 w-full">
                     <ProductImage product={product} variant="desktop" color={selectedColor} />
                 </Link>
@@ -37,8 +41,8 @@ export default function ProductCard({ product }) {
                     <p className="text-xs text-neutral-500 mt-0.5">{selectedColor || "Select a color"}</p>
 
                     {/* Color Swatches */}
-                    <div className="mt-2 flex gap-1.5">
-                        {product.variants.map((color) => (
+                    <div className="mt-2 flex gap-1.5 flex-wrap">
+                        {colorsToShow.map((color) => (
                             <button
                                 key={color.id}
                                 style={{ backgroundColor: color.hex_code }}
@@ -46,6 +50,28 @@ export default function ProductCard({ product }) {
                                 onClick={(e) => { e.stopPropagation(); setSelectedColor(color.color_name); setSelectedVariant(color) }}
                             />
                         ))}
+                        
+                        {/* + button if there are more colors */}
+                        {hasMoreColors && !showAllColors && (
+                            <button
+                                className="w-6 h-6 rounded-full border border-neutral-300 bg-neutral-100 flex items-center justify-center text-xs font-medium text-neutral-600 hover:bg-neutral-200 transition-colors duration-200"
+                                onClick={(e) => { e.stopPropagation(); setShowAllColors(true) }}
+                                title={`Show ${product.variants.length - 4} more colors`}
+                            >
+                                +
+                            </button>
+                        )}
+                        
+                        {/* - button when expanded */}
+                        {hasMoreColors && showAllColors && (
+                            <button
+                                className="w-6 h-6 rounded-full border border-neutral-300 bg-neutral-100 flex items-center justify-center text-xs font-medium text-neutral-600 hover:bg-neutral-200 transition-colors duration-200"
+                                onClick={(e) => { e.stopPropagation(); setShowAllColors(false) }}
+                                title="Show fewer colors"
+                            >
+                                −
+                            </button>
+                        )}
                     </div>
 
                     {/* Pricing */}

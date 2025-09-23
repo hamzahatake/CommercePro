@@ -12,11 +12,10 @@ import { SneakerBanner } from "@/components/SneakersHero";
 export default function ProductsListContent() {
     const [query, setQuery] = useQueryParams();
 
-    // Fetch products based on query params from URL (page, search, category, ordering, etc.)
     const { data, isLoading, error } = useGetProductsQuery(query);
 
     const currentPage = Number(query.page) || 1;
-    const pageSize = Number(query.page_size) || 20; // backend default
+    const pageSize = Number(query.page_size) || 20;
     const totalCount = data?.count || 0;
     const totalPages = totalCount ? Math.ceil(totalCount / pageSize) : 0;
 
@@ -42,14 +41,14 @@ export default function ProductsListContent() {
                         <div className="mt-4 mb-4 md:mb-6">
                             <FilterPanel />
                         </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-1">
                             {data?.results?.map((product) => (
                                 <div key={product.id} className="flex mx-auto">
                                     <ProductCard product={product} />
                                 </div>
                             ))}
                         </div>
-
+                        
                         <div>
                             <Pagination
                                 currentPage={currentPage}

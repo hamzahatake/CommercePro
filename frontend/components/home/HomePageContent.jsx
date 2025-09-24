@@ -2,6 +2,7 @@ import VideoHero from "@/components/VideoHero";
 import CatalogGrid from "@/components/catalog/CatalogGrid";
 import HeroCarousel from "../HeroCarousel";
 import GridLayout from "../GridLayout";
+import ShoeCarousel from "../shoes/ShoeCarousel";
 
 export default function HomePageContent() {
     return (
@@ -10,6 +11,7 @@ export default function HomePageContent() {
             <CatalogGrid />
             <HeroCarousel />
             <GridLayout />
+            <ShoeCarousel />
         </div>
     );
 }

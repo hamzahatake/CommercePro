@@ -19,7 +19,6 @@ const GridLayout = () => {
                 style={{ fontSize: 'clamp(14px, 2vw, 18px)', fontFamily: 'Inter, sans-serif' }}>
                 The New Wool Cruiser Collection
               </p>
-
               <p className="text-white text-center font-bold leading-tight mb-6"
                 style={{ fontSize: 'clamp(24px, 4vw, 48px)', fontFamily: 'Inter, sans-serif' }}>
                 Colors Of Expressions

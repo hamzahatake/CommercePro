@@ -1,78 +1,46 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useGetProductsQuery } from '@/features/api/apiSlice';
 import ShoeCard from './ShoeCard';
-
-// Sample shoe data - replace with actual data from your API
-const sampleShoes = [
-  {
-    id: 1,
-    name: "Tree Dasher 2",
-    color: "#8B4513",
-    colorName: "Brown",
-    image: "/products/mens-tree-dasher-2/brown.webp",
-    price: 98
-  },
-  {
-    id: 2,
-    name: "Tree Runner NZ",
-    color: "#000000",
-    colorName: "Black",
-    image: "/products/mens-tree-runner-nz/black.webp",
-    price: 98
-  },
-  {
-    id: 3,
-    name: "Wool Cruiser",
-    color: "#4169E1",
-    colorName: "Blue",
-    image: "/products/mens-wool-cruiser/blue.webp",
-    price: 98
-  },
-  {
-    id: 4,
-    name: "Wool Cruiser Slip-On",
-    color: "#228B22",
-    colorName: "Green",
-    image: "/products/mens-wool-cruiser-slip-on/green.webp",
-    price: 98
-  },
-  {
-    id: 5,
-    name: "Tree Dasher 2",
-    color: "#FF6347",
-    colorName: "Red",
-    image: "/products/mens-tree-dasher-2/red.webp",
-    price: 98
-  },
-  {
-    id: 6,
-    name: "Tree Runner NZ",
-    color: "#9370DB",
-    colorName: "Purple",
-    image: "/products/mens-tree-runner-nz/purple.webp",
-    price: 98
-  }
-];
+import ShoeLoader from '@/components/ShoeLoader';
 
 const ShoeCarousel = () => {
+  // Fetch products using RTK Query
+  const { data: productsData, isLoading, error } = useGetProductsQuery({ 
+    page: 1, 
+    page_size: 20 
+  });
+  
+  const allProducts = productsData?.results || [];
+  const products = allProducts.slice(0, 20); // Limit to 20 cards
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState(0);
   const [dragOffset, setDragOffset] = useState(0);
   const containerRef = useRef(null);
 
-  const cardsPerView = 4; // Number of cards visible at once
-  const maxIndex = Math.max(0, sampleShoes.length - cardsPerView);
+  const cardsPerView = 4;
+  const maxIndex = products.length - cardsPerView;
 
   const nextSlide = () => {
-    setCurrentIndex(prev => Math.min(prev + 1, maxIndex));
+    setCurrentIndex(prev => {
+      if (prev >= maxIndex) {
+        return 0; // Loop back to start
+      }
+      return prev + 1;
+    });
   };
 
   const prevSlide = () => {
-    setCurrentIndex(prev => Math.max(prev - 1, 0));
+    setCurrentIndex(prev => {
+      if (prev <= 0) {
+        return maxIndex; // Loop to end
+      }
+      return prev - 1;
+    });
   };
 
   // Touch and mouse drag handlers
@@ -135,7 +103,6 @@ const ShoeCarousel = () => {
     }
   };
 
-  // Add global mouse event listeners when dragging
   useEffect(() => {
     if (isDragging) {
       document.addEventListener('mousemove', handleMouseMove);
@@ -147,17 +114,52 @@ const ShoeCarousel = () => {
     }
   }, [isDragging, dragStart]);
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="w-full px-4 py-8">
+        <div className="flex justify-center items-center h-80">
+          <ShoeLoader />
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="w-full px-4 py-8">
+        <div className="flex justify-center items-center h-80">
+          <p className="text-gray-500">Failed to load products</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show empty state
+  if (!products.length) {
+    return (
+      <div className="w-full px-4 py-8">
+        <div className="flex justify-center items-center h-80">
+          <p className="text-gray-500">No products available</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full px-4 py-8">
-      {/* Top Row */}
       <div className="flex justify-between items-center mb-6">
+
         {/* Left side - Text buttons */}
         <div className="flex gap-4">
-          <button className="text-gray-700 hover:text-gray-900 transition-colors duration-300 font-medium">
+          <button className="relative text-[16px] text-[#000000] hover:text-gray-700 transition-colors duration-300 font-medium group">
             Shop Men
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-700 transition-all duration-300 ease-in-out group-hover:w-full"></span>
           </button>
-          <button className="text-gray-700 hover:text-gray-900 transition-colors duration-300 font-medium">
+          <button className="relative text-[16px] text-[#000000] hover:text-gray-700 transition-colors duration-300 font-medium group">
             Shop Women
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-700 transition-all duration-300 ease-in-out group-hover:w-full"></span>
           </button>
         </div>
 
@@ -165,15 +167,13 @@ const ShoeCarousel = () => {
         <div className="flex gap-2">
           <button
             onClick={prevSlide}
-            disabled={currentIndex === 0}
-            className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-300 flex items-center justify-center"
+            className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors duration-300 flex items-center justify-center"
           >
             <ChevronLeft className="w-5 h-5 text-gray-700" />
           </button>
           <button
             onClick={nextSlide}
-            disabled={currentIndex === maxIndex}
-            className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-300 flex items-center justify-center"
+            className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors duration-300 flex items-center justify-center"
           >
             <ChevronRight className="w-5 h-5 text-gray-700" />
           </button>
@@ -201,11 +201,11 @@ const ShoeCarousel = () => {
             damping: 30,
           }}
           style={{
-            width: `${sampleShoes.length * (256 + 16)}px`, // Total width for all cards
+            width: `${products.length * (256 + 16)}px`, // Total width for all cards
           }}
         >
-          {sampleShoes.map((shoe) => (
-            <ShoeCard key={shoe.id} shoe={shoe} />
+          {products.map((product, index) => (
+            <ShoeCard key={`${product.id}-${index}`} product={product} />
           ))}
         </motion.div>
       </div>
@@ -214,4 +214,5 @@ const ShoeCarousel = () => {
 };
 
 export default ShoeCarousel;
+
 

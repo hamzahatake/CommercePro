@@ -25,3 +25,4 @@ const shoeSlice = createSlice({
 export const { setSelectedShoe, setCurrentIndex, clearSelectedShoe } = shoeSlice.actions;
 export default shoeSlice.reducer;
 
+

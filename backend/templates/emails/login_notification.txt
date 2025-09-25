@@ -1,0 +1,24 @@
+{{ site_name }} - Login Successful
+
+Hello {{ user.first_name }}!
+
+We're writing to confirm that you successfully logged into your {{ site_name }} account.
+
+Login Details:
+- Time: {{ login_time }}
+- Account: {{ user.email }}
+- Role: {{ user.role|title }}
+
+If this was you, no further action is required. You can continue using your account normally.
+
+Quick Links:
+- Dashboard: {{ dashboard_url }}
+- Products: {{ products_url }}
+
+SECURITY NOTE: If you did not log in to your account, please contact our support team immediately at {{ support_email }} and consider changing your password.
+
+Thank you for using {{ site_name }}!
+
+If you have any questions, please contact us at {{ support_email }}
+
+This is an automated message. Please do not reply to this email.

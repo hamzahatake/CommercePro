@@ -13,7 +13,7 @@ def test_customer_adds_item_to_cart():
     client = APIClient()
     client.force_authenticate(user=customer)
 
-    response = client.post("/api/cart/add/", {"product_id": product.id, "quantity": 2})
+    response = client.post("/api/cart/add/", {"product": product.id, "quantity": 2})
 
     assert response.status_code == 200
     assert response.data["total"] == "100.00"   # cart total

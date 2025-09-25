@@ -5,6 +5,9 @@ import { useRegisterUserMutation, useRegisterVendorMutation } from "@/features/a
 import { useDispatch } from "react-redux";
 import { useState } from "react";
 import { loginSuccess } from "@/features/auth/authSlice";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { UserPlus, Store, Eye, EyeOff, User, Mail, Lock, Building } from "lucide-react";
 
 export default function RegistrationForm() {
     const [registerUser, { isLoading: userLoading, error: userError }] =
@@ -12,6 +15,7 @@ export default function RegistrationForm() {
     const [registerVendor, { isLoading: vendorLoading, error: vendorError }] =
         useRegisterVendorMutation();
     const dispatch = useDispatch();
+    const router = useRouter();
 
     const [role, setRole] = useState("user");
     const [username, setUsername] = useState("");
@@ -21,6 +25,8 @@ export default function RegistrationForm() {
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
     const [businessName, setBusinessName] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const handleRegister = async (e) => {
         e.preventDefault();
@@ -54,25 +60,30 @@ export default function RegistrationForm() {
                 }).unwrap();
             }
 
-            // ⚡ depends on backend:
-            // If registration ALSO returns tokens:
+            // Handle successful registration
             if (result.access && result.refresh) {
                 dispatch(
                     loginSuccess({
                         user: result.user || null,
-                        token: result.token,
-                        refresh: result.refresh,
+                        accessToken: result.access,
+                        refreshToken: result.refresh,
                     })
                 );
             } else {
-                // If only user is returned
                 dispatch(
                     loginSuccess({
                         user: result,
-                        token: null,
-                        refresh: null,
+                        accessToken: null,
+                        refreshToken: null,
                     })
                 );
+            }
+
+            // Redirect based on role
+            if (role === "vendor") {
+                router.push('/vendor/dashboard');
+            } else {
+                router.push('/products');
             }
         } catch (err) {
             console.error("Registration failed:", err?.data || err);
@@ -84,24 +95,78 @@ export default function RegistrationForm() {
     const error = userError || vendorError;
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-100">
-            <div className="bg-white p-8 rounded-2xl shadow-md w-full max-w-4xl">
-                <h2 className="text-2xl font-bold mb-6 text-center">Register</h2>
+        <div className="min-h-screen pt-16 flex items-center justify-center" style={{ backgroundColor: "#EDEAE4" }}>
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-2xl"
+            >
+                {/* Header */}
+                <div className="text-center mb-8">
+                    <div className="flex justify-center mb-4">
+                        <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ backgroundColor: "#000000" }}>
+                            {role === "vendor" ? (
+                                <Store className="h-8 w-8 text-white" />
+                            ) : (
+                                <UserPlus className="h-8 w-8 text-white" />
+                            )}
+                        </div>
+                    </div>
+                    <h2 className="text-3xl font-light mb-2" style={{ color: "#1A1A1A" }}>
+                        Create Account
+                    </h2>
+                    <p className="text-sm" style={{ color: "#555555" }}>
+                        Join as a {role === "vendor" ? "vendor" : "customer"}
+                    </p>
+                </div>
+
+                {/* Role Selection */}
+                <div className="mb-8">
+                    <div className="flex bg-gray-100 rounded-lg p-1">
+                        <button
+                            type="button"
+                            onClick={() => setRole("user")}
+                            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${role === "user"
+                                    ? "bg-white text-black shadow-sm"
+                                    : "text-gray-600 hover:text-gray-900"
+                                }`}
+                        >
+                            <div className="flex items-center justify-center gap-2">
+                                <User className="h-4 w-4" />
+                                Customer
+                            </div>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setRole("vendor")}
+                            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${role === "vendor"
+                                    ? "bg-white text-black shadow-sm"
+                                    : "text-gray-600 hover:text-gray-900"
+                                }`}
+                        >
+                            <div className="flex items-center justify-center gap-2">
+                                <Store className="h-4 w-4" />
+                                Vendor
+                            </div>
+                        </button>
+                    </div>
+                </div>
 
                 {error && (
-                    <p className="text-red-500 text-center mb-4">
-                        {error?.data?.detail || "Registration failed"}
-                    </p>
+                    <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                        <p className="text-red-600 text-sm text-center">
+                            {error?.data?.detail || "Registration failed"}
+                        </p>
+                    </div>
                 )}
 
-                <form
-                    className="grid grid-cols-1 md:grid-cols-2 gap-6"
-                    onSubmit={handleRegister}
-                >
+                <form className="space-y-6" onSubmit={handleRegister}>
+                    {/* Name Fields */}
                     {role === "user" && (
-                        <>
-                            <div className="flex flex-col">
-                                <label htmlFor="firstName" className="mb-1 font-medium">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label htmlFor="firstName" className="block text-sm font-medium mb-2" style={{ color: "#1A1A1A" }}>
                                     First Name
                                 </label>
                                 <input
@@ -109,13 +174,13 @@ export default function RegistrationForm() {
                                     id="firstName"
                                     value={firstName}
                                     onChange={(e) => setFirstName(e.target.value)}
-                                    className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                                    placeholder="John"
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition-colors"
+                                    placeholder="Enter your first name"
+                                    required
                                 />
                             </div>
-
-                            <div className="flex flex-col">
-                                <label htmlFor="lastName" className="mb-1 font-medium">
+                            <div>
+                                <label htmlFor="lastName" className="block text-sm font-medium mb-2" style={{ color: "#1A1A1A" }}>
                                     Last Name
                                 </label>
                                 <input
@@ -123,121 +188,159 @@ export default function RegistrationForm() {
                                     id="lastName"
                                     value={lastName}
                                     onChange={(e) => setLastName(e.target.value)}
-                                    className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                                    placeholder="Doe"
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition-colors"
+                                    placeholder="Enter your last name"
+                                    required
                                 />
                             </div>
-                        </>
-                    )}
-
-                    {role === "vendor" && (
-                        <div className="flex flex-col md:col-span-2">
-                            <label htmlFor="businessName" className="mb-1 font-medium">
-                                Business Name
-                            </label>
-                            <input
-                                type="text"
-                                id="businessName"
-                                value={businessName}
-                                onChange={(e) => setBusinessName(e.target.value)}
-                                className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 w-full"
-                                placeholder="Company Inc."
-                            />
                         </div>
                     )}
 
-                    <div className="flex flex-col">
-                        <label htmlFor="username" className="mb-1 font-medium">
+                    {/* Business Name for Vendors */}
+                    {role === "vendor" && (
+                        <div>
+                            <label htmlFor="businessName" className="block text-sm font-medium mb-2" style={{ color: "#1A1A1A" }}>
+                                Business Name
+                            </label>
+                            <div className="relative">
+                                <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                                <input
+                                    type="text"
+                                    id="businessName"
+                                    value={businessName}
+                                    onChange={(e) => setBusinessName(e.target.value)}
+                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition-colors"
+                                    placeholder="Enter your business name"
+                                    required
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Username */}
+                    <div>
+                        <label htmlFor="username" className="block text-sm font-medium mb-2" style={{ color: "#1A1A1A" }}>
                             Username
                         </label>
-                        <input
-                            type="text"
-                            id="username"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                            placeholder="johndoe"
-                        />
+                        <div className="relative">
+                            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                            <input
+                                type="text"
+                                id="username"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition-colors"
+                                placeholder="Choose a username"
+                                required
+                            />
+                        </div>
                     </div>
 
-                    <div className="flex flex-col">
-                        <label htmlFor="email" className="mb-1 font-medium">
-                            Email
+                    {/* Email */}
+                    <div>
+                        <label htmlFor="email" className="block text-sm font-medium mb-2" style={{ color: "#1A1A1A" }}>
+                            Email Address
                         </label>
-                        <input
-                            type="email"
-                            id="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                            placeholder="you@example.com"
-                        />
+                        <div className="relative">
+                            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                            <input
+                                type="email"
+                                id="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition-colors"
+                                placeholder="Enter your email address"
+                                required
+                            />
+                        </div>
                     </div>
 
-                    <div className="flex flex-col">
-                        <label htmlFor="password" className="mb-1 font-medium">
+                    {/* Password */}
+                    <div>
+                        <label htmlFor="password" className="block text-sm font-medium mb-2" style={{ color: "#1A1A1A" }}>
                             Password
                         </label>
-                        <input
-                            type="password"
-                            id="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                            placeholder="********"
-                        />
+                        <div className="relative">
+                            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                id="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition-colors"
+                                placeholder="Create a password"
+                                required
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                            >
+                                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                            </button>
+                        </div>
                     </div>
 
-                    <div className="flex flex-col">
-                        <label htmlFor="confirmPassword" className="mb-1 font-medium">
+                    {/* Confirm Password */}
+                    <div>
+                        <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2" style={{ color: "#1A1A1A" }}>
                             Confirm Password
                         </label>
-                        <input
-                            type="password"
-                            id="confirmPassword"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                            placeholder="********"
-                        />
+                        <div className="relative">
+                            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                            <input
+                                type={showConfirmPassword ? "text" : "password"}
+                                id="confirmPassword"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition-colors"
+                                placeholder="Confirm your password"
+                                required
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                            >
+                                {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                            </button>
+                        </div>
                     </div>
 
-                    <div className="flex flex-col md:col-span-2">
-                        <label htmlFor="role" className="mb-1 font-medium">
-                            Select Role
-                        </label>
-                        <select
-                            id="role"
-                            value={role}
-                            onChange={(e) => setRole(e.target.value)}
-                            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 w-full"
-                        >
-                            <option value="user">User</option>
-                            <option value="vendor">Vendor</option>
-                        </select>
-                    </div>
-
-                    <div className="md:col-span-2">
-                        <button
-                            type="submit"
-                            className="w-full bg-blue-600 text-white py-3 rounded-full font-semibold hover:bg-blue-700 transition"
-                            disabled={isLoading}
-                        >
-                            {isLoading ? "Registering..." : "Register"}
-                        </button>
-                    </div>
+                    {/* Submit Button */}
+                    <button
+                        type="submit"
+                        disabled={isLoading}
+                        className="w-full py-3 rounded-full font-semibold text-white transition-all duration-300 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                        style={{ backgroundColor: "#000000" }}
+                    >
+                        {isLoading ? "Creating Account..." : `Create ${role === "vendor" ? "Vendor" : "Customer"} Account`}
+                    </button>
                 </form>
 
-                <p className="text-sm text-center text-gray-500 mt-4">
-                    Already have an account?{" "}
-                    <Link
-                        href="/login"
-                        className="text-blue-600 font-medium cursor-pointer"
-                    >
-                        Login
-                    </Link>
-                </p>
-            </div>
+                {/* Footer Links */}
+                <div className="mt-8 space-y-4">
+                    <div className="text-center">
+                        <Link
+                            href="/login/customer"
+                            className="text-sm hover:underline"
+                            style={{ color: "#555555" }}
+                        >
+                            Already have a customer account? Sign in
+                        </Link>
+                    </div>
+
+                    <div className="text-center">
+                        <Link
+                            href="/login/vendor"
+                            className="text-sm hover:underline"
+                            style={{ color: "#555555" }}
+                        >
+                            Already have a vendor account? Sign in
+                        </Link>
+                    </div>
+                </div>
+            </motion.div>
         </div>
     );
 }

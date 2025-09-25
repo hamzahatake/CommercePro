@@ -11,20 +11,33 @@ export const apiSlice = createApi({
 
     // --- User ---
     userProfile: builder.query({
-      query: () => "users/profile/"
+      query: () => "auth/profile/"
+    }),
+
+    // --- Vendor Profile ---
+    vendorProfile: builder.query({
+      query: () => "users/api/profile/vendor/"
+    }),
+    updateVendorProfile: builder.mutation({
+      query: (data) => ({
+        url: "users/api/profile/vendor/",
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: ["VendorProfile"],
     }),
 
     login: builder.mutation({
-      query: ({ username, password }) => ({
-        url: "users/auth/login/",
+      query: ({ email, password }) => ({
+        url: "auth/login/",
         method: "POST",
-        body: { username, password },
+        body: { email, password },
       }),
     }),
 
     registerUser: builder.mutation({
       query: ({ username, email, password, password_confirm, first_name, last_name }) => ({
-        url: "users/auth/register/",
+        url: "auth/register/",
         method: "POST",
         body: { username, email, password, password_confirm, first_name, last_name },
       }),
@@ -32,15 +45,15 @@ export const apiSlice = createApi({
 
     registerVendor: builder.mutation({
       query: ({ username, email, password, password_confirm, first_name, last_name, business_name }) => ({
-        url: "users/auth/vendor-register/",
+        url: "auth/register/",
         method: "POST",
-        body: { username, email, password, password_confirm, first_name, last_name, business_name },
+        body: { username, email, password, password_confirm, first_name, last_name, business_name, role: "vendor" },
       }),
     }),
 
     refreshToken: builder.mutation({
       query: ({ refresh }) => ({
-        url: "users/auth/token/refresh/",
+        url: "auth/token/refresh/",
         method: "POST",
         body: { refresh },
       }),
@@ -60,19 +73,19 @@ export const apiSlice = createApi({
       invalidatesTags: ["Cart"],
     }),
     removeFromCart: builder.mutation({
-      query: ({ product }) => ({
-        url: `cart/remove/${product}/`,
-        method: "POST",
+      query: ({ cartItemId }) => ({
+        url: `cart/remove/${cartItemId}/`,
+        method: "DELETE",
       }),
       invalidatesTags: ["Cart"],
     }),
     updateCart: builder.mutation({
-      query: ({ product, quantity }) => ({
-        url: `cart/update/${product}/`,
-        method: "POST",
+      query: ({ cartItemId, quantity }) => ({
+        url: `cart/update/${cartItemId}/`,
+        method: "PATCH",
         body: { quantity },
       }),
-      invalidatesTags: ["Cart"], // keep it simple
+      invalidatesTags: ["Cart"],
     }),
 
 
@@ -105,8 +118,8 @@ export const apiSlice = createApi({
 
     // --- Products ---
     getProducts: builder.query({
-      query: ({ page = 1, search, category, ordering } = {}) => {
-        const query = formatQueryParams({ page, search, category, ordering });
+      query: ({ page = 1, search, category, ordering, price_min, price_max, color, size } = {}) => {
+        const query = formatQueryParams({ page, search, category, ordering, price_min, price_max, color, size });
         return `products/${query}`;
       },
       transformResponse: (response) => ({
@@ -155,12 +168,51 @@ export const apiSlice = createApi({
     }),
 
     // --- Vendors (Admin) ---
-    getVendors: builder.query({ query: () => "admin/vendors/" }),
+    getVendors: builder.query({ 
+      query: () => "admin/vendors/",
+      transformResponse: (response) => {
+        // Handle both array and paginated response formats
+        return Array.isArray(response) ? response : response.results || [];
+      }
+    }),
     approveVendor: builder.mutation({
       query: (id) => ({ url: `admin/vendors/${id}/approve/`, method: "PATCH" }),
     }),
     rejectVendor: builder.mutation({
       query: (id) => ({ url: `admin/vendors/${id}/reject/`, method: "PATCH" }),
+    }),
+
+    // --- Managers (Admin) ---
+    getManagers: builder.query({ 
+      query: () => "admin/managers/",
+      providesTags: ["Managers"],
+      transformResponse: (response) => {
+        // Handle both array and paginated response formats
+        return Array.isArray(response) ? response : response.results || [];
+      }
+    }),
+    createManager: builder.mutation({
+      query: (body) => ({
+        url: "admin/managers/create/",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Managers"],
+    }),
+    updateManager: builder.mutation({
+      query: ({ id, ...body }) => ({
+        url: `admin/managers/${id}/update/`,
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: ["Managers"],
+    }),
+    deleteManager: builder.mutation({
+      query: (id) => ({
+        url: `admin/managers/${id}/delete/`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Managers"],
     }),
   }),
 });
@@ -183,7 +235,13 @@ export const {
   useGetVendorsQuery,
   useApproveVendorMutation,
   useRejectVendorMutation,
+  useGetManagersQuery,
+  useCreateManagerMutation,
+  useUpdateManagerMutation,
+  useDeleteManagerMutation,
   useUserProfileQuery,
+  useVendorProfileQuery,
+  useUpdateVendorProfileMutation,
   useLoginMutation,
   useRegisterUserMutation,
   useRegisterVendorMutation,

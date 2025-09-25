@@ -1,10 +1,22 @@
 import { useState } from "react";
 import { useCartHandlers } from "../../features/cart/cart";
+import { useRouter } from "next/navigation";
+import { useAuth } from "../auth/AuthProvider";
+import { useCartAnimation } from "@/contexts/CartAnimationContext";
+import { useUserProfileQuery } from "@/features/api/apiSlice";
 
 export default function InfoColumn({ product, variants = [], variantIndex = 0, onVariantChange, }) {
+  const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const [sizeIndex, setSizeIndex] = useState(-1);
-  const [quantity, setQuantity] = useState(0);
+  const [quantity, setQuantity] = useState(1);
   const { handleAddToCart, handleUpdateCart } = useCartHandlers();
+  const { triggerCartAnimation } = useCartAnimation();
+  
+  // Get user data to check role
+  const { data: user } = useUserProfileQuery(undefined, {
+    skip: !isAuthenticated
+  });
 
   const currentVariant = variants[variantIndex] || variants[0] || null;
 
@@ -103,11 +115,10 @@ export default function InfoColumn({ product, variants = [], variantIndex = 0, o
             type="button"
             aria-label="Decrease quantity"
             className="px-2 py-2 cursor-pointer"
-            disabled={quantity === 0}
+            disabled={quantity <= 1}
             onClick={() => {
-              const newQty = quantity - 1;
+              const newQty = Math.max(1, quantity - 1);
               setQuantity(newQty);
-              handleUpdateCart(product, newQty);
             }}
           >
             -
@@ -120,22 +131,62 @@ export default function InfoColumn({ product, variants = [], variantIndex = 0, o
             onClick={() => {
               const newQty = quantity + 1;
               setQuantity(newQty);
-              handleUpdateCart(product, newQty);
             }}
           >
             +
           </button>
         </div>
-        <button type="button" aria-label="Add to cart" disabled={quantity === 0} onClick={() => handleAddToCart(product, quantity)}
-          className={`flex-1 py-3 rounded-full font-medium text-sm ${quantity === 0
-            ? "bg-gray-300 text-gray-600 disabled:cursor-not-allowed" : "bg-black text-white cursor-pointer"
-            }`}>
-          Add to cart
-        </button>
+        {/* Add to cart button - Only show for customers and non-authenticated users */}
+        {(!isAuthenticated || (isAuthenticated && user?.role === 'customer')) && (
+          <button 
+            ref={(el) => { window.addToCartButton = el; }}
+            type="button" 
+            aria-label="Add to cart" 
+            disabled={sizes.length > 0 && sizeIndex === -1}
+            onClick={async (e) => {
+              if (!isAuthenticated) {
+                router.push('/login/customer');
+                return;
+              }
+              
+              if (sizes.length > 0 && sizeIndex === -1) {
+                alert('Please select a size before adding to cart');
+                return;
+              }
+              
+              try {
+                const result = await handleAddToCart(product, quantity);
+                
+                // Trigger cart animation with source element
+                const productImage = product.main_image || product.image || product.images?.[0];
+                if (productImage) {
+                  triggerCartAnimation(productImage, product.title, e.currentTarget);
+                }
+                
+                // No popup - just visual feedback via animation
+              } catch (error) {
+                console.error('Failed to add to cart:', error);
+                // No popup on error either - let the animation handle feedback
+              }
+            }}
+            className={`flex-1 py-3 rounded-full font-medium text-sm cursor-pointer transition-opacity ${
+              sizes.length > 0 && sizeIndex === -1 
+                ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+                : 'bg-black text-white hover:opacity-90'
+            }`}
+          >
+            {!isAuthenticated 
+              ? 'Login to Add to Cart' 
+              : sizes.length > 0 && sizeIndex === -1 
+                ? 'Select Size First' 
+                : 'Add to cart'
+            }
+          </button>
+        )}
         <button
           type="button"
           aria-label="Add to wishlist"
-          className="px-3 py-3 border rounded-md"
+          className="px-3 py-3 border rounded-md hover:bg-gray-50 transition-colors"
         >
           ♡
         </button>

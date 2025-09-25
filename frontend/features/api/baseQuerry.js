@@ -25,7 +25,7 @@ export const baseQueryWithReauth = async (args, api, extraOptions) => {
         if (refreshToken) {
             const refreshResult = await baseQuery(
                 {
-                    url: "users/auth/token/refresh/",
+                    url: "auth/token/refresh/",
                     method: "POST",
                     body: { refresh: refreshToken },
                 },

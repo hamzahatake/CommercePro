@@ -168,7 +168,7 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
@@ -202,3 +202,11 @@ SUPPORT_EMAIL = os.getenv("SUPPORT_EMAIL", "support@example.com")
 VENDOR_SUPPORT_EMAIL = os.getenv("VENDOR_SUPPORT_EMAIL", "vendor-support@example.com")
 ADMIN_SUPPORT_EMAIL = os.getenv("ADMIN_SUPPORT_EMAIL", "admin-support@example.com")
 SUPER_ADMIN_EMAIL = os.getenv("SUPER_ADMIN_EMAIL", "super-admin@example.com")
+
+# Celery Configuration
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "amqp://guest:guest@rabbitmq:5672//")
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "rpc://")
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE

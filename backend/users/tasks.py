@@ -5,7 +5,8 @@ from .emails import (
     send_verification_email, 
     send_password_reset_email, 
     send_welcome_email,
-    send_password_change_notification
+    send_password_change_notification,
+    send_login_notification
 )
 import logging
 
@@ -94,6 +95,20 @@ def send_password_change_notification_task(user_id):
         logger.error(f"User with id {user_id} not found")
     except Exception as e:
         logger.error(f"Failed to send password change notification to user {user_id}: {str(e)}")
+        raise
+
+
+@shared_task
+def send_login_notification_task(user_id):
+    """Send login notification email to user"""
+    try:
+        user = User.objects.get(id=user_id)
+        send_login_notification(user)
+        logger.info(f"Login notification sent successfully to {user.email}")
+    except User.DoesNotExist:
+        logger.error(f"User with id {user_id} not found")
+    except Exception as e:
+        logger.error(f"Failed to send login notification to user {user_id}: {str(e)}")
         raise
 
 

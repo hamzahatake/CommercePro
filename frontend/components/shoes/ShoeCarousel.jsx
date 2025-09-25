@@ -148,7 +148,7 @@ const ShoeCarousel = () => {
   }
 
   return (
-    <div className="w-full px-4 py-8">
+    <div className="w-full py-8">
       <div className="flex justify-between items-center mb-6">
 
         {/* Left side - Text buttons */}

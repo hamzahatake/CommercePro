@@ -13,6 +13,13 @@ class User(AbstractUser):
         ADMIN = "admin", "Admin"
 
     role = models.CharField(max_length=255, choices=Roles.choices, null=False, blank=False, default=Roles.CUSTOMER)
+    
+    # Override email field to make it unique and required
+    email = models.EmailField(unique=True, blank=False, null=False)
+    
+    # Use email as the username field for authentication
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
 
     def __str__(self):
         return self.email
@@ -27,6 +34,7 @@ class CustomerProfile(models.Model):
 
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="customer_profile")
+    profile_picture = models.ImageField(upload_to='media/profile_pictures/', validators=[validate_image_size], null=True, blank=True)
     phone_number = models.IntegerField(unique=True, blank=True, null=True)
     shipping_address = models.CharField(max_length=255, blank=True, null=True)
     billing_address = models.CharField(max_length=255, blank=True, null=True)

@@ -1,4 +1,5 @@
 from django.urls import path
+from rest_framework_simplejwt.views import TokenRefreshView
 from .views import (
     UserProfileRegistrationView,
     UserProfileRetrieveUpdateAPIView,
@@ -20,7 +21,18 @@ from .views import (
     PasswordResetConfirmView,
     UserProfileView,
     ChangePasswordView,
-    ResendVerificationEmailView
+    ResendVerificationEmailView,
+    
+    # Admin vendor management views
+    AdminVendorListView,
+    AdminVendorApproveView,
+    AdminVendorRejectView,
+    
+    # Admin manager management views
+    AdminManagerListView,
+    AdminManagerCreateView,
+    AdminManagerUpdateView,
+    AdminManagerDeleteView
 )
 
 urlpatterns = [
@@ -40,10 +52,22 @@ urlpatterns = [
     path("auth/register/", UserRegistrationView.as_view(), name="auth-register"),
     path("auth/login/", UserLoginView.as_view(), name="auth-login"),
     path("auth/logout/", UserLogoutView.as_view(), name="auth-logout"),
+    path("auth/token/refresh/", TokenRefreshView.as_view(), name="token-refresh"),
     path("auth/verify-email/<str:token>/", EmailVerificationView.as_view(), name="auth-verify-email"),
     path("auth/password-reset/", PasswordResetView.as_view(), name="auth-password-reset"),
     path("auth/password-reset/confirm/<str:token>/", PasswordResetConfirmView.as_view(), name="auth-password-reset-confirm"),
     path("auth/profile/", UserProfileView.as_view(), name="auth-profile"),
     path("auth/change-password/", ChangePasswordView.as_view(), name="auth-change-password"),
     path("auth/resend-verification/", ResendVerificationEmailView.as_view(), name="auth-resend-verification"),
+    
+    # Admin vendor management endpoints
+    path("admin/vendors/", AdminVendorListView.as_view(), name="admin-vendors-list"),
+    path("admin/vendors/<int:vendor_id>/approve/", AdminVendorApproveView.as_view(), name="admin-vendor-approve"),
+    path("admin/vendors/<int:vendor_id>/reject/", AdminVendorRejectView.as_view(), name="admin-vendor-reject"),
+    
+    # Admin manager management endpoints
+    path("admin/managers/", AdminManagerListView.as_view(), name="admin-managers-list"),
+    path("admin/managers/create/", AdminManagerCreateView.as_view(), name="admin-manager-create"),
+    path("admin/managers/<int:pk>/update/", AdminManagerUpdateView.as_view(), name="admin-manager-update"),
+    path("admin/managers/<int:manager_id>/delete/", AdminManagerDeleteView.as_view(), name="admin-manager-delete"),
 ]

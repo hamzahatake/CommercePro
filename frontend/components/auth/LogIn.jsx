@@ -5,27 +5,37 @@ import { useLoginMutation } from "@/features/api/apiSlice";
 import { useDispatch } from "react-redux";
 import { useState } from "react";
 import { loginSuccess } from "@/features/auth/authSlice";
+import { useRouter } from "next/navigation";
 
 export default function LoginForm() {
-    const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
     const [login, { isLoading, isError, error }] = useLoginMutation();
     const dispatch = useDispatch();
+    const router = useRouter();
 
     const handleLogIn = async (e) => {
         e.preventDefault();
         try {
-            const result = await login({ username, password }).unwrap();
+            const result = await login({ email, password }).unwrap();
             console.log('Login result:', result);
             console.log('User in result:', result.user);
             dispatch(
                 loginSuccess({
                     user: result.user,
-                    accessToken: result.access,
-                    refreshToken: result.refresh,
+                    accessToken: result.tokens.access,
+                    refreshToken: result.tokens.refresh,
                 })
             );
+            
+            // Redirect based on user role
+            if (result.user.role === 'vendor') {
+                router.push('/vendor/dashboard');
+            } else {
+                router.push('/profile');
+            }
+            
             console.log("Success")
             console.log(result)
         } catch (err) {
@@ -41,22 +51,22 @@ export default function LoginForm() {
 
                 {isError && (
                     <p className="text-red-500 text-center mb-2">
-                        {error || "Invalid username or password"}
+                        {error || "Invalid email or password"}
                     </p>
                 )}
 
                 <form className="space-y-4" onSubmit={handleLogIn}>
                     <div className="flex flex-col">
-                        <label htmlFor="username" className="mb-1 font-medium">
-                            Username
+                        <label htmlFor="email" className="mb-1 font-medium">
+                            Email
                         </label>
                         <input
-                            type="text"
-                            id="username"
-                            placeholder="Goku123"
+                            type="email"
+                            id="email"
+                            placeholder="user@example.com"
                             className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
                             required
                         />
                     </div>

@@ -149,6 +149,40 @@ def send_welcome_email(user):
     )
 
 
+def send_login_notification(user):
+    """
+    Send login notification email to user
+    """
+    from django.utils import timezone
+    
+    context = {
+        'user': user,
+        'site_name': getattr(settings, 'SITE_NAME', 'Commerce Pro'),
+        'login_time': timezone.now().strftime('%B %d, %Y at %I:%M %p'),
+        'profile_url': f"{settings.FRONTEND_URL}/profile/",
+        'support_email': getattr(settings, 'SUPPORT_EMAIL', 'support@example.com'),
+    }
+    
+    # Add role-specific context
+    if user.role == 'customer':
+        context.update({
+            'dashboard_url': f"{settings.FRONTEND_URL}/profile/",
+            'products_url': f"{settings.FRONTEND_URL}/products/",
+        })
+    elif user.role == 'vendor':
+        context.update({
+            'dashboard_url': f"{settings.FRONTEND_URL}/vendor/dashboard/",
+            'products_url': f"{settings.FRONTEND_URL}/products/",
+        })
+    
+    send_email(
+        subject=f"Login Successful - {context['site_name']}",
+        to_email=user.email,
+        template_name="login_notification",
+        context=context
+    )
+
+
 def send_password_change_notification(user):
     """
     Send notification email when password is changed

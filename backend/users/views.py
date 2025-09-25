@@ -28,6 +28,7 @@ from .serializers import (
     UserProfileSerializer
     )
 from .models import CustomerProfile, VendorProfile, ManagerProfile, AdminProfile, EmailVerificationToken, PasswordResetToken
+from .permissions import IsAdminUser
 from django.db import transaction
 
 User = get_user_model()
@@ -65,6 +66,11 @@ class CustomerProfileRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
             return self.request.user.customer_profile
         except CustomerProfile.DoesNotExist:
             raise Http404("Profile not found!")
+    
+    def update(self, request, *args, **kwargs):
+        print(f"Customer profile update request: {request.data}")
+        print(f"Files in request: {request.FILES}")
+        return super().update(request, *args, **kwargs)
 
 
 class VendorProfileRegistrationView(generics.CreateAPIView):
@@ -86,10 +92,15 @@ class VendorProfileRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
             return self.request.user.vendor_profile
         except VendorProfile.DoesNotExist:
             raise Http404("Profile not found!")
+    
+    def update(self, request, *args, **kwargs):
+        print(f"Vendor profile update request: {request.data}")
+        print(f"Files in request: {request.FILES}")
+        return super().update(request, *args, **kwargs)
 
 
 class ManagerProfileRegistrationView(generics.CreateAPIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAdminUser]  # Only admins can create manager accounts
     serializer_class = ManagerRegistrationSerializer
 
     @transaction.atomic()
@@ -130,8 +141,32 @@ class UserRegistrationView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         
+        # Create vendor profile if role is vendor
+        if user.role == 'vendor' and 'business_name' in request.data:
+            VendorProfile.objects.create(
+                user=user,
+                shop_name=request.data.get('business_name', ''),
+                business_email=user.email
+            )
+        # Create customer profile if role is customer
+        elif user.role == 'customer':
+            phone_number = request.data.get('phone_number')
+            if phone_number:
+                try:
+                    phone_number = int(phone_number)
+                except (ValueError, TypeError):
+                    phone_number = None
+            
+            CustomerProfile.objects.create(
+                user=user,
+                phone_number=phone_number,
+                shipping_address=request.data.get('shipping_address'),
+                billing_address=request.data.get('billing_address'),
+                preferred_payment_method=request.data.get('preferred_payment_method')
+            )
+        
         return Response({
-            'message': 'Registration successful. Please check your email to verify your account.',
+            'message': 'Registration successful! Welcome to Commerce Pro. You can now log in.',
             'user': {
                 'id': user.id,
                 'email': user.email,
@@ -154,6 +189,10 @@ class UserLoginView(APIView):
         
         user = serializer.validated_data['user']
         refresh = RefreshToken.for_user(user)
+        
+        # Send login notification email
+        from .tasks import send_login_notification_task
+        send_login_notification_task.delay(user.id)
         
         return Response({
             'message': 'Login successful',
@@ -305,3 +344,141 @@ class AdminProfileRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
             return self.request.user.admin_profile
         except AdminProfile.DoesNotExist:
             raise Http404("Profile not found!")
+
+
+# Admin Vendor Management Views
+class AdminVendorListView(generics.ListAPIView):
+    """List all vendors for admin approval"""
+    permission_classes = [IsAdminUser]
+    serializer_class = VendorProfileSerializer
+    
+    def get_queryset(self):
+        return VendorProfile.objects.select_related('user').all().order_by('-id')
+
+
+class AdminVendorApproveView(APIView):
+    """Approve a vendor"""
+    permission_classes = [IsAdminUser]
+    
+    def patch(self, request, vendor_id):
+        try:
+            vendor_profile = VendorProfile.objects.get(id=vendor_id)
+            vendor_profile.approved = True
+            vendor_profile.save()
+            
+            # Activate the user account
+            vendor_profile.user.is_active = True
+            vendor_profile.user.save()
+            
+            # Send approval email
+            from .tasks import send_welcome_email_task
+            send_welcome_email_task.delay(
+                vendor_profile.user.id,
+                vendor_profile.user.email,
+                vendor_profile.user.username,
+                rejected=False,
+                on_signup=False
+            )
+            
+            return Response({
+                'message': 'Vendor approved successfully',
+                'vendor': {
+                    'id': vendor_profile.id,
+                    'shop_name': vendor_profile.shop_name,
+                    'approved': vendor_profile.approved
+                }
+            }, status=status.HTTP_200_OK)
+            
+        except VendorProfile.DoesNotExist:
+            return Response({
+                'error': 'Vendor not found'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+
+class AdminVendorRejectView(APIView):
+    """Reject a vendor"""
+    permission_classes = [IsAdminUser]
+    
+    def patch(self, request, vendor_id):
+        try:
+            vendor_profile = VendorProfile.objects.get(id=vendor_id)
+            
+            # Send rejection email
+            from .tasks import send_welcome_email_task
+            send_welcome_email_task.delay(
+                vendor_profile.user.id,
+                vendor_profile.user.email,
+                vendor_profile.user.username,
+                rejected=True,
+                on_signup=False
+            )
+            
+            # Delete the vendor profile and user
+            vendor_profile.user.delete()
+            
+            return Response({
+                'message': 'Vendor rejected and account deleted'
+            }, status=status.HTTP_200_OK)
+            
+        except VendorProfile.DoesNotExist:
+            return Response({
+                'error': 'Vendor not found'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+
+# Admin Manager Management Views
+class AdminManagerListView(generics.ListAPIView):
+    """List all managers for admin management"""
+    permission_classes = [IsAdminUser]
+    serializer_class = ManagerProfileSerializer
+    
+    def get_queryset(self):
+        return ManagerProfile.objects.select_related('user').all().order_by('-id')
+
+
+class AdminManagerCreateView(generics.CreateAPIView):
+    """Create a new manager (admin only)"""
+    permission_classes = [IsAdminUser]
+    serializer_class = ManagerRegistrationSerializer
+
+    @transaction.atomic()
+    def perform_create(self, serializer):
+        manager = serializer.save()
+        # Send welcome email with credentials
+        from .tasks import send_welcome_email_task
+        send_welcome_email_task.delay(
+            manager.user.id,
+            manager.user.email,
+            manager.user.username,
+            rejected=False,
+            on_signup=True
+        )
+        return manager
+
+
+class AdminManagerUpdateView(generics.UpdateAPIView):
+    """Update manager profile"""
+    permission_classes = [IsAdminUser]
+    serializer_class = ManagerProfileSerializer
+    
+    def get_queryset(self):
+        return ManagerProfile.objects.all()
+
+
+class AdminManagerDeleteView(APIView):
+    """Delete a manager"""
+    permission_classes = [IsAdminUser]
+    
+    def delete(self, request, manager_id):
+        try:
+            manager_profile = ManagerProfile.objects.get(id=manager_id)
+            manager_profile.user.delete()
+            
+            return Response({
+                'message': 'Manager deleted successfully'
+            }, status=status.HTTP_200_OK)
+            
+        except ManagerProfile.DoesNotExist:
+            return Response({
+                'error': 'Manager not found'
+            }, status=status.HTTP_404_NOT_FOUND)

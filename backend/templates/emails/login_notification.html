@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Successful - {{ site_name }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #007bff;
+            margin: 0;
+        }
+        .content {
+            margin-bottom: 30px;
+        }
+        .login-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .button {
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 5px;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #666;
+            font-size: 14px;
+        }
+        .security-note {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{{ site_name }}</h1>
+        </div>
+        
+        <div class="content">
+            <h2>Hello {{ user.first_name }}!</h2>
+            
+            <p>We're writing to confirm that you successfully logged into your {{ site_name }} account.</p>
+            
+            <div class="login-info">
+                <strong>Login Details:</strong><br>
+                <strong>Time:</strong> {{ login_time }}<br>
+                <strong>Account:</strong> {{ user.email }}<br>
+                <strong>Role:</strong> {{ user.role|title }}
+            </div>
+            
+            <p>If this was you, no further action is required. You can continue using your account normally.</p>
+            
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{{ dashboard_url }}" class="button">Go to Dashboard</a>
+                <a href="{{ products_url }}" class="button">Browse Products</a>
+            </div>
+            
+            <div class="security-note">
+                <strong>Security Note:</strong> If you did not log in to your account, please contact our support team immediately at {{ support_email }} and consider changing your password.
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Thank you for using {{ site_name }}!</p>
+            <p>If you have any questions, please contact us at {{ support_email }}</p>
+            <p>This is an automated message. Please do not reply to this email.</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -18,8 +18,11 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserRegistrationSerializer(BaseUserSerializer):
+    role = serializers.ChoiceField(choices=User.Roles.choices, default=User.Roles.CUSTOMER)
+    
     class Meta:
         model = User
+        fields = BaseUserSerializer.Meta.fields + ['role']
 
 
 class CustomerProfileSerializer(serializers.ModelSerializer):
@@ -28,10 +31,20 @@ class CustomerProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomerProfile
         fields = [
-            "id", "user", "phone_number", "shipping_address", 
+            "id", "user", "profile_picture", "phone_number", "shipping_address", 
             "billing_address", "preferred_payment_method"
         ]
         read_only_fields = ["id"]
+    
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if instance.profile_picture:
+            request = self.context.get('request')
+            if request:
+                data['profile_picture'] = request.build_absolute_uri(instance.profile_picture.url)
+            else:
+                data['profile_picture'] = instance.profile_picture.url
+        return data
 
 
 class CustomerRegistrationSerializer(BaseUserSerializer):
@@ -72,6 +85,16 @@ class VendorProfileSerializer(serializers.ModelSerializer):
             "account_number", "approved"
         ]
         read_only_fields = ["id", "approved"]
+    
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if instance.shop_logo:
+            request = self.context.get('request')
+            if request:
+                data['shop_logo'] = request.build_absolute_uri(instance.shop_logo.url)
+            else:
+                data['shop_logo'] = instance.shop_logo.url
+        return data
 
 
 class VendorRegistrationSerializer(BaseUserSerializer):
@@ -211,10 +234,12 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             last_name=validated_data['last_name'],
             password=validated_data['password'],
             role=validated_data.get('role', 'customer'),
-            is_active=False  
+            is_active=True  # Auto-activate users
         )
         
-        send_verification_email_task.delay(user.id)
+        # Send welcome email to new user
+        from .tasks import send_welcome_email_task_new
+        send_welcome_email_task_new.delay(user.id)
         
         return user
 
@@ -342,7 +367,28 @@ class ChangePasswordSerializer(serializers.Serializer):
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
+    profile_picture = serializers.SerializerMethodField()
+    shop_logo = serializers.SerializerMethodField()
+    
     class Meta:
         model = User
-        fields = ['id', 'email', 'username', 'first_name', 'last_name', 'role', 'is_active', 'date_joined']
+        fields = ['id', 'email', 'username', 'first_name', 'last_name', 'role', 'is_active', 'date_joined', 'profile_picture', 'shop_logo']
         read_only_fields = ['id', 'email', 'role', 'is_active', 'date_joined']
+    
+    def get_profile_picture(self, obj):
+        if obj.role == 'customer' and hasattr(obj, 'customer_profile'):
+            if obj.customer_profile.profile_picture:
+                request = self.context.get('request')
+                if request:
+                    return request.build_absolute_uri(obj.customer_profile.profile_picture.url)
+                return obj.customer_profile.profile_picture.url
+        return None
+    
+    def get_shop_logo(self, obj):
+        if obj.role == 'vendor' and hasattr(obj, 'vendor_profile'):
+            if obj.vendor_profile.shop_logo:
+                request = self.context.get('request')
+                if request:
+                    return request.build_absolute_uri(obj.vendor_profile.shop_logo.url)
+                return obj.vendor_profile.shop_logo.url
+        return None

@@ -1,11 +1,14 @@
 from rest_framework import serializers
-from .models import User, VendorProfile, EmailVerificationToken, PasswordResetToken
+from .models import (
+    User, VendorProfile, EmailVerificationToken, PasswordResetToken,
+    CustomerProfile, ManagerProfile, AdminProfile
+)
 from django.contrib.auth import get_user_model, authenticate
 from rest_framework.validators import ValidationError
-from .models import User, CustomerProfile, VendorProfile, ManagerProfile, AdminProfile
 from core.serializers.base import BaseUserSerializer
 from django.contrib.auth.password_validation import validate_password
 from django.utils.crypto import get_random_string
+from django.utils import timezone
 from .emails import send_verification_email, send_password_reset_email
 from .tasks import send_verification_email_task, send_password_reset_email_task, send_welcome_email_task_new
 
@@ -149,14 +152,16 @@ class ManagerProfileSerializer(serializers.ModelSerializer):
 class ManagerRegistrationSerializer(BaseUserSerializer):
     department = serializers.CharField()
     phone_number = serializers.IntegerField()
+    permissions_level = serializers.CharField(required=False)
 
     class Meta(BaseUserSerializer.Meta):
-        fields = BaseUserSerializer.Meta.fields + ["department", "phone_number"]
+        fields = BaseUserSerializer.Meta.fields + ["department", "phone_number", "permissions_level"]
 
     def create(self, validated_data):
         profile_data = {
             "department": validated_data.pop("department"),
             "phone_number": validated_data.pop("phone_number"),
+            "permissions_level": validated_data.pop("permissions_level", "basic"),
         }
 
         user = super().create(validated_data)
@@ -253,7 +258,17 @@ class UserLoginSerializer(serializers.Serializer):
         password = attrs.get('password')
         
         if email and password:
+            # Try to authenticate with email as username first
             user = authenticate(username=email, password=password)
+            
+            # If that fails, try to find user by email and authenticate with their actual username
+            if not user:
+                try:
+                    user_obj = User.objects.get(email=email)
+                    user = authenticate(username=user_obj.username, password=password)
+                except User.DoesNotExist:
+                    pass
+            
             if not user:
                 raise serializers.ValidationError('Invalid credentials.')
             if not user.is_active:
@@ -392,3 +407,87 @@ class UserProfileSerializer(serializers.ModelSerializer):
                     return request.build_absolute_uri(obj.vendor_profile.shop_logo.url)
                 return obj.vendor_profile.shop_logo.url
         return None
+
+
+class AdminUserSerializer(serializers.ModelSerializer):
+    """Serializer for admin user management (create and update)"""
+    password = serializers.CharField(write_only=True, required=False, validators=[validate_password])
+    password_confirm = serializers.CharField(write_only=True, required=False)
+    
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'username', 'first_name', 'last_name', 'password', 'password_confirm', 'role', 'is_active']
+        extra_kwargs = {
+            'email': {'required': True},
+            'username': {'required': True},
+            'first_name': {'required': True},
+            'last_name': {'required': True},
+        }
+
+    def validate_email(self, value):
+        # Allow same email for updates
+        if self.instance and self.instance.email == value:
+            return value
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return value
+    
+    def validate_username(self, value):
+        # Allow same username for updates
+        if self.instance and self.instance.username == value:
+            return value
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError("A user with this username already exists.")
+        return value
+    
+    def validate(self, attrs):
+        # Only validate password confirmation if password is provided
+        if 'password' in attrs and 'password_confirm' in attrs:
+            if attrs['password'] != attrs['password_confirm']:
+                raise serializers.ValidationError("Passwords don't match.")
+        return attrs
+    
+    def create(self, validated_data):
+        validated_data.pop('password_confirm', None)
+        password = validated_data.pop('password', None)
+        
+        user = User.objects.create_user(
+            email=validated_data['email'],
+            username=validated_data['username'],
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name'],
+            password=password,
+            role=validated_data.get('role', 'customer'),
+            is_active=validated_data.get('is_active', True)
+        )
+        
+        return user
+    
+    def update(self, instance, validated_data):
+        validated_data.pop('password_confirm', None)
+        password = validated_data.pop('password', None)
+        
+        # Update password if provided
+        if password:
+            instance.set_password(password)
+        
+        # Update other fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        
+        instance.save()
+        return instance
+
+
+class UserListSerializer(serializers.ModelSerializer):
+    """Simplified serializer for user lists"""
+    role_display = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'username', 'first_name', 'last_name', 'role', 
+                 'is_active', 'date_joined', 'role_display']
+    
+    def get_role_display(self, obj):
+        """Get user's role display name"""
+        return obj.get_role_display_name()

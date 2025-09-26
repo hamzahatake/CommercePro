@@ -6,7 +6,7 @@ import { baseQueryWithReauth } from "./baseQuerry.js";
 export const apiSlice = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["Cart", "Wishlist", "Products", "Orders", "Vendors", "Product"],
+  tagTypes: ["Cart", "Wishlist", "Products", "Orders", "Vendors", "Product", "Managers", "Users"],
   endpoints: (builder) => ({
 
     // --- User ---
@@ -214,6 +214,57 @@ export const apiSlice = createApi({
       }),
       invalidatesTags: ["Managers"],
     }),
+
+    // --- User Management (Admin) ---
+    getUsers: builder.query({
+      query: ({ search, role, is_active } = {}) => {
+        const params = new URLSearchParams();
+        if (search) params.append('search', search);
+        if (role) params.append('role', role);
+        if (is_active !== undefined) params.append('is_active', is_active);
+        const query = params.toString();
+        return `admin/users/${query ? `?${query}` : ''}`;
+      },
+      providesTags: ["Users"],
+      transformResponse: (response) => {
+        return Array.isArray(response) ? response : response.results || [];
+      }
+    }),
+    createUser: builder.mutation({
+      query: (body) => ({
+        url: "admin/users/create/",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Users"],
+    }),
+    getUserDetail: builder.query({
+      query: (id) => `admin/users/${id}/`,
+      providesTags: (result, error, id) => [{ type: "Users", id }],
+    }),
+    updateUser: builder.mutation({
+      query: ({ id, ...body }) => ({
+        url: `admin/users/${id}/`,
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: (result, error, { id }) => [
+        { type: "Users", id },
+        "Users",
+      ],
+    }),
+    deleteUser: builder.mutation({
+      query: (id) => ({
+        url: `admin/users/${id}/`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (result, error, id) => [
+        { type: "Users", id },
+        "Users",
+      ],
+    }),
+
+    // Note: Removed complex role management endpoints as we simplified to use simple role field
   }),
 });
 
@@ -246,4 +297,10 @@ export const {
   useRegisterUserMutation,
   useRegisterVendorMutation,
   useRefreshTokenMutation,
+  // User Management
+  useGetUsersQuery,
+  useCreateUserMutation,
+  useGetUserDetailQuery,
+  useUpdateUserMutation,
+  useDeleteUserMutation,
 } = apiSlice;

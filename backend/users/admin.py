@@ -1,6 +1,9 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, CustomerProfile, VendorProfile, ManagerProfile, AdminProfile, EmailVerificationToken, PasswordResetToken
+from .models import (
+    User, CustomerProfile, VendorProfile, ManagerProfile, AdminProfile, 
+    EmailVerificationToken, PasswordResetToken
+)
 
 class VendorProfileInline(admin.StackedInline):
     model = VendorProfile
@@ -99,3 +102,6 @@ class PasswordResetTokenAdmin(admin.ModelAdmin):
         return obj.is_expired()
     is_expired.boolean = True
     is_expired.short_description = "Expired"
+
+
+# Note: Removed complex role management admin classes as we simplified to use simple role field

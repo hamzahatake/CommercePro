@@ -9,7 +9,7 @@ export default function ManagerRegistrationForm({ isOpen, onClose, onSubmit }) {
         username: "",
         email: "",
         password: "",
-        password_confirm: "",
+        confirm_password: "",
         first_name: "",
         last_name: "",
         department: "sales",
@@ -30,6 +30,13 @@ export default function ManagerRegistrationForm({ isOpen, onClose, onSubmit }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        // Validate password confirmation
+        if (formData.password !== formData.confirm_password) {
+            alert('Passwords do not match!');
+            return;
+        }
+        
         setIsLoading(true);
         
         try {
@@ -39,7 +46,7 @@ export default function ManagerRegistrationForm({ isOpen, onClose, onSubmit }) {
                 username: "",
                 email: "",
                 password: "",
-                password_confirm: "",
+                confirm_password: "",
                 first_name: "",
                 last_name: "",
                 department: "sales",
@@ -193,8 +200,8 @@ export default function ManagerRegistrationForm({ isOpen, onClose, onSubmit }) {
                                 <input
                                     type={showConfirmPassword ? "text" : "password"}
                                     id="password_confirm"
-                                    name="password_confirm"
-                                    value={formData.password_confirm}
+                                    name="confirm_password"
+                                    value={formData.confirm_password}
                                     onChange={handleInputChange}
                                     required
                                     className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"

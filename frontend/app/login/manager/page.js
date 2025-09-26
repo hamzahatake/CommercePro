@@ -1,5 +1,5 @@
-import ManagerLogin from "@/components/auth/ManagerLogin";
+import ManagerAdminLogin from "@/components/auth/ManagerAdminLogin";
 
 export default function ManagerLoginPage() {
-    return <ManagerLogin />;
+    return <ManagerAdminLogin />;
 }

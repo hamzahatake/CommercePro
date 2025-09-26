@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { debounce } from "@/utils/debounce";
 import { Menu, X, Search, User, ShoppingCart, Shield, Settings } from "lucide-react";
 import { motion as Motion, AnimatePresence } from "framer-motion";
@@ -18,17 +18,23 @@ import ProfilePic from "@/public/Auth.png"
 function Navbar() {
   const { isAuthenticated, user: authUser } = useAuth();
   const router = useRouter();
-  
-  // Only make the API call if user is authenticated
+
+  // Hydration-safe state
+  const [isHydrated, setIsHydrated] = useState(false);
+
   const { data: user, isLoading, isError } = useUserProfileQuery(undefined, {
     skip: !isAuthenticated
   });
-
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [profileOpen, setProfileOpen] = useState(false);
+
+  // Set hydrated state after component mounts
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   const dispatch = useDispatch();
   const cartItemCount = useSelector(selectCartItemCount);
@@ -99,7 +105,9 @@ function Navbar() {
                 onMouseEnter={() => setProfileOpen(true)}
                 onMouseLeave={() => setProfileOpen(false)}
               >
-                {isAuthenticated ? (
+                {!isHydrated ? (
+                  <User className="w-5 h-5 text-neutral-600" />
+                ) : isAuthenticated ? (
                   authUser?.role === 'admin' ? (
                     <div className="w-7 h-7 bg-red-100 rounded-full flex items-center justify-center">
                       <Shield className="w-4 h-4 text-red-600" />
@@ -108,17 +116,17 @@ function Navbar() {
                     <div className="w-7 h-7 bg-purple-100 rounded-full flex items-center justify-center">
                       <Settings className="w-4 h-4 text-purple-600" />
                     </div>
-                  ) : user ? (
-                    <img 
-                      src={
-                        authUser?.role === 'vendor' && user?.shop_logo 
-                          ? user.shop_logo 
-                          : authUser?.role === 'customer' && user?.profile_picture
-                          ? user.profile_picture
-                          : ProfilePic
-                      } 
-                      alt="Profile" 
-                      className="w-7 h-7 rounded-full object-cover" 
+                  ) : authUser?.role === 'vendor' ? (
+                    <img
+                      src={user?.shop_logo || ProfilePic}
+                      alt="Profile"
+                      className="w-7 h-7 rounded-full object-cover"
+                    />
+                  ) : authUser?.role === 'customer' ? (
+                    <img
+                      src={user?.profile_picture || ProfilePic}
+                      alt="Profile"
+                      className="w-7 h-7 rounded-full object-cover"
                     />
                   ) : (
                     <User className="w-5 h-5 text-neutral-600" />
@@ -145,15 +153,15 @@ function Navbar() {
                             {authUser?.first_name} {authUser?.last_name}
                           </p>
                           <p className="text-xs" style={{ color: "#555555" }}>
-                            {authUser?.role === 'vendor' ? 'Vendor' : 
-                             authUser?.role === 'manager' ? 'Manager' :
-                             authUser?.role === 'admin' ? 'Admin' : 'Customer'}
+                            {authUser?.role === 'vendor' ? 'Vendor' :
+                              authUser?.role === 'manager' ? 'Manager' :
+                                authUser?.role === 'admin' ? 'Admin' : 'Customer'}
                           </p>
                         </div>
                         <Link
-                          href={authUser?.role === 'vendor' ? '/vendor/profile' : 
-                                authUser?.role === 'manager' ? '/manager/dashboard' :
-                                authUser?.role === 'admin' ? '/admin/dashboard' : '/profile'}
+                          href={authUser?.role === 'vendor' ? '/vendor/profile' :
+                            authUser?.role === 'manager' ? '/manager/dashboard' :
+                              authUser?.role === 'admin' ? '/admin/dashboard' : '/profile'}
                           className="block px-4 py-2 hover:bg-gray-100 text-sm">
                           {authUser?.role === 'manager' || authUser?.role === 'admin' ? 'Dashboard' : 'Profile'}
                         </Link>
@@ -165,9 +173,9 @@ function Navbar() {
                           </Link>
                         )}
                         <Link
-                          href={authUser?.role === 'vendor' ? '/vendor/settings' : 
-                                authUser?.role === 'manager' ? '/manager/settings' :
-                                authUser?.role === 'admin' ? '/admin/settings' : '/settings'}
+                          href={authUser?.role === 'vendor' ? '/vendor/settings' :
+                            authUser?.role === 'manager' ? '/manager/settings' :
+                              authUser?.role === 'admin' ? '/admin/settings' : '/settings'}
                           className="block px-4 py-2 hover:bg-gray-100 text-sm">
                           Settings
                         </Link>
@@ -180,24 +188,9 @@ function Navbar() {
                     ) : (
                       <>
                         <Link
-                          href="/login/customer"
+                          href="/login"
                           className="block px-4 py-2 hover:bg-gray-100 text-sm">
-                          Customer Login
-                        </Link>
-                        <Link
-                          href="/login/vendor"
-                          className="block px-4 py-2 hover:bg-gray-100 text-sm">
-                          Vendor Login
-                        </Link>
-                        <Link
-                          href="/login/manager"
-                          className="block px-4 py-2 hover:bg-gray-100 text-sm">
-                          Manager Login
-                        </Link>
-                        <Link
-                          href="/login/admin"
-                          className="block px-4 py-2 hover:bg-gray-100 text-sm">
-                          Admin Login
+                          Login
                         </Link>
                         <Link
                           href="/registration"
@@ -212,23 +205,25 @@ function Navbar() {
             </div>
 
             {/* CART ICON - Only show for customers and non-authenticated users */}
-            {(isAuthenticated && user?.role === 'customer') || !isAuthenticated ? (
-              <Link 
-                href="/cart" 
+            {!isHydrated ? (
+              <div className="w-9 h-9"></div>
+            ) : (isAuthenticated && authUser?.role === 'customer') || !isAuthenticated ? (
+              <Link
+                href="/cart"
                 ref={cartIconRef}
-                className="relative p-2 rounded-full hover:bg-neutral-100 text-neutral-600 hover:text-neutral-900 transition-colors" 
+                className="relative p-2 rounded-full hover:bg-neutral-100 text-neutral-600 hover:text-neutral-900 transition-colors"
                 aria-label="Cart"
               >
                 <ShoppingCart className="w-5 h-5" />
                 {cartItemCount > 0 && (
-                  <motion.span 
+                  <motion.span
                     className="absolute -top-1 -right-1 bg-black text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium"
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    transition={{ 
-                      type: "spring", 
-                      stiffness: 500, 
-                      damping: 15 
+                    transition={{
+                      type: "spring",
+                      stiffness: 500,
+                      damping: 15
                     }}
                     key={cartItemCount}
                   >

@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractUser
 from .validators import validate_image_size
 from django.utils import timezone
 from datetime import timedelta
+from django.core.exceptions import ValidationError
 
 
 class User(AbstractUser):
@@ -23,6 +24,14 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.email
+    
+    def has_role(self, role_name):
+        """Check if user has a specific role"""
+        return self.role == role_name
+    
+    def get_role_display_name(self):
+        """Get the display name for the user's role"""
+        return dict(self.Roles.choices).get(self.role, self.role.title())
     
 
 class CustomerProfile(models.Model):
@@ -132,3 +141,7 @@ class PasswordResetToken(models.Model):
         """Mark token as used"""
         self.is_used = True
         self.save()
+
+
+# Note: Removed complex role management system in favor of simple role field on User model
+# This simplifies the system and eliminates redundancy

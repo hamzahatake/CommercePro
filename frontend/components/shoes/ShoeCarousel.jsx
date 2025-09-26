@@ -152,7 +152,7 @@ const ShoeCarousel = () => {
       <div className="flex justify-between items-center mb-6">
 
         {/* Left side - Text buttons */}
-        <div className="flex gap-4">
+        <div className="flex pl-4 gap-4">
           <button className="relative text-[16px] text-[#000000] hover:text-gray-700 transition-colors duration-300 font-medium group">
             Shop Men
             <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-700 transition-all duration-300 ease-in-out group-hover:w-full"></span>
@@ -164,7 +164,7 @@ const ShoeCarousel = () => {
         </div>
 
         {/* Right side - Arrow buttons */}
-        <div className="flex gap-2">
+        <div className="flex pr-4 gap-2">
           <button
             onClick={prevSlide}
             className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors duration-300 flex items-center justify-center"

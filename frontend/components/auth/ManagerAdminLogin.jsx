@@ -7,9 +7,9 @@ import { useState } from "react";
 import { loginSuccess } from "@/features/auth/authSlice";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Shield, Eye, EyeOff } from "lucide-react";
+import { Shield, Settings, Eye, EyeOff, Users } from "lucide-react";
 
-export default function AdminLogin() {
+export default function ManagerAdminLogin() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
@@ -26,8 +26,8 @@ export default function AdminLogin() {
         try {
             const result = await login({ email, password }).unwrap();
             
-            // Check if user is an admin
-            if (result.user.role === 'admin') {
+            // Check if user is a manager or admin
+            if (result.user.role === 'manager' || result.user.role === 'admin') {
                 dispatch(
                     loginSuccess({
                         user: result.user,
@@ -36,10 +36,14 @@ export default function AdminLogin() {
                     })
                 );
                 
-                // Redirect to admin dashboard
-                router.push('/admin/dashboard');
+                // Redirect based on role
+                if (result.user.role === 'manager') {
+                    router.push('/manager/dashboard');
+                } else if (result.user.role === 'admin') {
+                    router.push('/admin/dashboard');
+                }
             } else {
-                alert("This login is for administrators only. Please use the appropriate login page for your role.");
+                alert("This login is for managers and administrators only. Please use the appropriate login page for your role.");
             }
         } catch (err) {
             console.error("Login failed:", err);
@@ -58,11 +62,14 @@ export default function AdminLogin() {
                 className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md mx-4"
             >
                 <div className="text-center mb-8">
-                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Shield className="w-8 h-8 text-red-600" />
+                    <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <div className="flex items-center gap-1">
+                            <Settings className="w-6 h-6 text-purple-600" />
+                            <Shield className="w-6 h-6 text-red-600" />
+                        </div>
                     </div>
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Login</h1>
-                    <p className="text-gray-600">Access the administrative dashboard</p>
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Staff Login</h1>
+                    <p className="text-gray-600">Access management and administrative dashboards</p>
                 </div>
 
                 <form onSubmit={handleLogin} className="space-y-6">
@@ -76,8 +83,8 @@ export default function AdminLogin() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
-                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-colors"
-                            placeholder="admin@example.com"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
+                            placeholder="staff@example.com"
                         />
                     </div>
 
@@ -92,7 +99,7 @@ export default function AdminLogin() {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
-                                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-colors pr-12"
+                                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors pr-12"
                                 placeholder="Enter your password"
                             />
                             <button
@@ -108,28 +115,49 @@ export default function AdminLogin() {
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full bg-red-600 text-white py-3 px-4 rounded-xl font-medium hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full bg-gradient-to-r from-purple-600 to-red-600 text-white py-3 rounded-xl font-semibold hover:from-purple-700 hover:to-red-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
-                        {isLoading ? "Signing In..." : "Sign In as Admin"}
+                        {isLoading ? (
+                            <>
+                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                                Signing In...
+                            </>
+                        ) : (
+                            <>
+                                <Users className="w-5 h-5" />
+                                Sign In
+                            </>
+                        )}
                     </button>
                 </form>
 
-                <div className="mt-8 text-center">
-                    <p className="text-sm text-gray-600 mb-4">Need access? Contact the system administrator.</p>
-                    <div className="space-y-2">
-                        <Link 
-                            href="/login/customer" 
-                            className="block text-sm text-blue-600 hover:text-blue-700 transition-colors"
-                        >
-                            Customer Login
-                        </Link>
-                        <Link 
-                            href="/login/vendor" 
-                            className="block text-sm text-blue-600 hover:text-blue-700 transition-colors"
-                        >
-                            Vendor Login
-                        </Link>
+                <div className="mt-6 text-center">
+                    <p className="text-sm text-gray-600 mb-4">Role Information</p>
+                    <div className="grid grid-cols-2 gap-4 text-xs">
+                        <div className="bg-purple-50 rounded-lg p-3">
+                            <div className="flex items-center gap-2 mb-1">
+                                <Settings className="w-4 h-4 text-purple-600" />
+                                <span className="font-medium text-purple-800">Manager</span>
+                            </div>
+                            <p className="text-purple-600">Operations & Vendor Management</p>
+                        </div>
+                        <div className="bg-red-50 rounded-lg p-3">
+                            <div className="flex items-center gap-2 mb-1">
+                                <Shield className="w-4 h-4 text-red-600" />
+                                <span className="font-medium text-red-800">Admin</span>
+                            </div>
+                            <p className="text-red-600">System Administration</p>
+                        </div>
                     </div>
+                </div>
+
+                <div className="mt-6 text-center">
+                    <Link 
+                        href="/login" 
+                        className="text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                    >
+                        ← Back to Login Options
+                    </Link>
                 </div>
             </motion.div>
         </div>

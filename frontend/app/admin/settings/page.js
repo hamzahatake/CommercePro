@@ -23,7 +23,7 @@ export default function AdminSettings() {
 
     useEffect(() => {
         if (!isAuthenticated || authUser?.role !== 'admin') {
-            router.push('/login/admin');
+            router.push('/login');
         }
     }, [isAuthenticated, authUser, router]);
 
@@ -63,10 +63,10 @@ export default function AdminSettings() {
             <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#EDEAE4' }}>
                 <div className="text-center">
                     <p className="text-lg font-medium text-gray-600 mb-4">Access denied. Admin privileges required.</p>
-                    <a 
-                        href="/login/admin" 
+                    <a
+                        href="/login"
                         className="px-6 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors">
-                        Go to Admin Login
+                        Go to Login
                     </a>
                 </div>
             </div>
@@ -74,12 +74,12 @@ export default function AdminSettings() {
     }
 
     return (
-        <div className="min-h-screen pt-16" style={{ backgroundColor: '#EDEAE4' }}>
+        <div className="min-h-screen" style={{ backgroundColor: '#EDEAE4' }}>
             <div className="max-w-6xl mx-auto px-4 py-8">
                 {/* Header */}
                 <div className="bg-white rounded-3xl shadow-sm p-8 mb-8">
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                        <div className="w-12 h-12 bg-gradient-to-br from-red-100 to-red-200 rounded-full flex items-center justify-center">
                             <Shield className="w-6 h-6 text-red-600" />
                         </div>
                         <div>
@@ -95,44 +95,40 @@ export default function AdminSettings() {
                         <nav className="space-y-2">
                             <button
                                 onClick={() => setActiveTab('account')}
-                                className={`w-full text-left px-4 py-3 rounded-xl transition-colors ${
-                                    activeTab === 'account' 
-                                        ? 'bg-red-100 text-red-700' 
+                                className={`w-full text-left px-4 py-3 rounded-xl transition-colors ${activeTab === 'account'
+                                        ? 'bg-gradient-to-r from-red-100 to-red-200 text-red-700'
                                         : 'text-gray-600 hover:bg-gray-100'
-                                }`}
+                                    }`}
                             >
                                 <User className="w-4 h-4 inline mr-3" />
                                 Account
                             </button>
                             <button
                                 onClick={() => setActiveTab('admin')}
-                                className={`w-full text-left px-4 py-3 rounded-xl transition-colors ${
-                                    activeTab === 'admin' 
-                                        ? 'bg-red-100 text-red-700' 
+                                className={`w-full text-left px-4 py-3 rounded-xl transition-colors ${activeTab === 'admin'
+                                        ? 'bg-gradient-to-r from-red-100 to-red-200 text-red-700'
                                         : 'text-gray-600 hover:bg-gray-100'
-                                }`}
+                                    }`}
                             >
                                 <Shield className="w-4 h-4 inline mr-3" />
                                 Admin Profile
                             </button>
                             <button
                                 onClick={() => setActiveTab('security')}
-                                className={`w-full text-left px-4 py-3 rounded-xl transition-colors ${
-                                    activeTab === 'security' 
-                                        ? 'bg-red-100 text-red-700' 
+                                className={`w-full text-left px-4 py-3 rounded-xl transition-colors ${activeTab === 'security'
+                                        ? 'bg-gradient-to-r from-red-100 to-red-200 text-red-700'
                                         : 'text-gray-600 hover:bg-gray-100'
-                                }`}
+                                    }`}
                             >
                                 <Lock className="w-4 h-4 inline mr-3" />
                                 Security
                             </button>
                             <button
                                 onClick={() => setActiveTab('system')}
-                                className={`w-full text-left px-4 py-3 rounded-xl transition-colors ${
-                                    activeTab === 'system' 
-                                        ? 'bg-red-100 text-red-700' 
+                                className={`w-full text-left px-4 py-3 rounded-xl transition-colors ${activeTab === 'system'
+                                        ? 'bg-gradient-to-r from-red-100 to-red-200 text-red-700'
                                         : 'text-gray-600 hover:bg-gray-100'
-                                }`}
+                                    }`}
                             >
                                 <Database className="w-4 h-4 inline mr-3" />
                                 System

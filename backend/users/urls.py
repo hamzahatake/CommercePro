@@ -32,7 +32,12 @@ from .views import (
     AdminManagerListView,
     AdminManagerCreateView,
     AdminManagerUpdateView,
-    AdminManagerDeleteView
+    AdminManagerDeleteView,
+    
+    # Simplified user management views
+    UserManagementListView,
+    UserManagementDetailView,
+    AdminUserCreateView
 )
 
 urlpatterns = [
@@ -70,4 +75,9 @@ urlpatterns = [
     path("admin/managers/create/", AdminManagerCreateView.as_view(), name="admin-manager-create"),
     path("admin/managers/<int:pk>/update/", AdminManagerUpdateView.as_view(), name="admin-manager-update"),
     path("admin/managers/<int:manager_id>/delete/", AdminManagerDeleteView.as_view(), name="admin-manager-delete"),
+    
+    # Simplified user management endpoints
+    path("admin/users/", UserManagementListView.as_view(), name="admin-users-list"),
+    path("admin/users/create/", AdminUserCreateView.as_view(), name="admin-user-create"),
+    path("admin/users/<int:pk>/", UserManagementDetailView.as_view(), name="admin-user-detail"),
 ]

@@ -7,6 +7,9 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.contrib.auth import get_user_model
+from django.db import transaction
+from django.utils import timezone
+from django.db.models import Q
 from .serializers import (
     UserSerializer,
     UserRegistrationSerializer, 
@@ -25,11 +28,17 @@ from .serializers import (
     PasswordResetConfirmSerializer,
     EmailVerificationSerializer,
     ChangePasswordSerializer,
-    UserProfileSerializer
+    UserProfileSerializer,
+    
+    # Admin user management serializers
+    AdminUserSerializer,
+    UserListSerializer
     )
-from .models import CustomerProfile, VendorProfile, ManagerProfile, AdminProfile, EmailVerificationToken, PasswordResetToken
+from .models import (
+    CustomerProfile, VendorProfile, ManagerProfile, AdminProfile, 
+    EmailVerificationToken, PasswordResetToken
+)
 from .permissions import IsAdminUser
-from django.db import transaction
 
 User = get_user_model()
 
@@ -482,3 +491,79 @@ class AdminManagerDeleteView(APIView):
             return Response({
                 'error': 'Manager not found'
             }, status=status.HTTP_404_NOT_FOUND)
+
+
+# Note: Removed complex role management views as we simplified to use simple role field
+
+
+class UserManagementListView(generics.ListAPIView):
+    """List all users for admin management"""
+    permission_classes = [IsAdminUser]
+    serializer_class = UserListSerializer
+    
+    def get_queryset(self):
+        queryset = User.objects.all()
+        
+        # Filter by role if specified
+        role_filter = self.request.query_params.get('role', None)
+        if role_filter:
+            queryset = queryset.filter(role=role_filter)
+        
+        # Filter by active status if specified
+        is_active = self.request.query_params.get('is_active', None)
+        if is_active is not None:
+            queryset = queryset.filter(is_active=is_active.lower() == 'true')
+        
+        # Search by email, username, or name
+        search = self.request.query_params.get('search', None)
+        if search:
+            queryset = queryset.filter(
+                Q(email__icontains=search) |
+                Q(username__icontains=search) |
+                Q(first_name__icontains=search) |
+                Q(last_name__icontains=search)
+            )
+        
+        return queryset.order_by('-date_joined')
+
+
+class UserManagementDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Retrieve, update or delete a user"""
+    permission_classes = [IsAdminUser]
+    serializer_class = AdminUserSerializer
+    
+    def get_queryset(self):
+        return User.objects.all()
+    
+    def destroy(self, request, *args, **kwargs):
+        """Deactivate the user instead of deleting"""
+        instance = self.get_object()
+        instance.is_active = False
+        instance.save()
+        return Response({'message': 'User deactivated successfully'}, status=status.HTTP_200_OK)
+
+
+class AdminUserCreateView(generics.CreateAPIView):
+    """Create a new user (admin only)"""
+    permission_classes = [IsAdminUser]
+    serializer_class = AdminUserSerializer
+    
+    @transaction.atomic
+    def perform_create(self, serializer):
+        user = serializer.save()
+        
+        # Create appropriate profile based on role
+        if user.role == 'customer':
+            CustomerProfile.objects.create(user=user)
+        elif user.role == 'vendor':
+            VendorProfile.objects.create(user=user)
+        elif user.role == 'manager':
+            ManagerProfile.objects.create(user=user)
+        elif user.role == 'admin':
+            AdminProfile.objects.create(user=user)
+        
+        # Send welcome email
+        from .tasks import send_welcome_email_task_new
+        send_welcome_email_task_new.delay(user.id)
+        
+        return user

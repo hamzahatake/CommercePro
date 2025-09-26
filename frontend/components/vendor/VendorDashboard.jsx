@@ -2,10 +2,24 @@
 
 import { useAuth } from "../auth/AuthProvider";
 import { motion } from "framer-motion";
-import { Store, Package, Users, DollarSign } from "lucide-react";
+import { Store, Package, Users, DollarSign, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function VendorDashboard() {
     const { user } = useAuth();
+    const router = useRouter();
+
+    const handleAddProduct = () => {
+        router.push('/vendor/products/create');
+    };
+
+    const handleManageStore = () => {
+        router.push('/vendor/settings');
+    };
+
+    const handleViewOrders = () => {
+        router.push('/vendor/orders');
+    };
 
     return (
         <div className="min-h-screen" style={{ backgroundColor: "#EDEAE4" }}>
@@ -33,7 +47,7 @@ export default function VendorDashboard() {
                                 <p className="text-sm font-medium" style={{ color: "#555555" }}>Total Products</p>
                                 <p className="text-3xl font-bold" style={{ color: "#1A1A1A" }}>24</p>
                             </div>
-                            <Package className="h-8 w-8" style={{ color: "#000000" }} />
+                            <Package className="h-8 w-8 text-green-600" />
                         </div>
                     </motion.div>
 
@@ -48,7 +62,7 @@ export default function VendorDashboard() {
                                 <p className="text-sm font-medium" style={{ color: "#555555" }}>Total Sales</p>
                                 <p className="text-3xl font-bold" style={{ color: "#1A1A1A" }}>$12,450</p>
                             </div>
-                            <DollarSign className="h-8 w-8" style={{ color: "#000000" }} />
+                            <DollarSign className="h-8 w-8 text-green-600" />
                         </div>
                     </motion.div>
 
@@ -63,7 +77,7 @@ export default function VendorDashboard() {
                                 <p className="text-sm font-medium" style={{ color: "#555555" }}>Orders</p>
                                 <p className="text-3xl font-bold" style={{ color: "#1A1A1A" }}>156</p>
                             </div>
-                            <Users className="h-8 w-8" style={{ color: "#000000" }} />
+                            <Users className="h-8 w-8 text-green-600" />
                         </div>
                     </motion.div>
 
@@ -78,7 +92,7 @@ export default function VendorDashboard() {
                                 <p className="text-sm font-medium" style={{ color: "#555555" }}>Store Status</p>
                                 <p className="text-lg font-bold text-green-600">Active</p>
                             </div>
-                            <Store className="h-8 w-8" style={{ color: "#000000" }} />
+                            <Store className="h-8 w-8 text-green-600" />
                         </div>
                     </motion.div>
                 </div>
@@ -95,22 +109,29 @@ export default function VendorDashboard() {
                             Quick Actions
                         </h3>
                         <div className="space-y-4">
-                            <button className="w-full py-3 px-4 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors text-left">
+                            <button 
+                                onClick={handleAddProduct}
+                                className="w-full py-3 px-4 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors text-left flex items-center gap-3"
+                            >
+                                <Plus className="h-5 w-5" />
+                                <span>Add New Product</span>
+                            </button>
+                            <button 
+                                onClick={handleManageStore}
+                                className="w-full py-3 px-4 rounded-lg border border-green-300 hover:bg-green-50 transition-colors text-left"
+                            >
                                 <div className="flex items-center gap-3">
-                                    <Package className="h-5 w-5" />
-                                    <span>Add New Product</span>
+                                    <Store className="h-5 w-5 text-green-600" />
+                                    <span className="text-green-700">Manage Store Settings</span>
                                 </div>
                             </button>
-                            <button className="w-full py-3 px-4 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors text-left">
+                            <button 
+                                onClick={handleViewOrders}
+                                className="w-full py-3 px-4 rounded-lg border border-green-300 hover:bg-green-50 transition-colors text-left"
+                            >
                                 <div className="flex items-center gap-3">
-                                    <Store className="h-5 w-5" />
-                                    <span>Manage Store Settings</span>
-                                </div>
-                            </button>
-                            <button className="w-full py-3 px-4 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors text-left">
-                                <div className="flex items-center gap-3">
-                                    <Users className="h-5 w-5" />
-                                    <span>View Orders</span>
+                                    <Users className="h-5 w-5 text-green-600" />
+                                    <span className="text-green-700">View Orders</span>
                                 </div>
                             </button>
                         </div>

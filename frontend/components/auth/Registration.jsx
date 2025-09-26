@@ -105,7 +105,7 @@ export default function RegistrationForm() {
                 {/* Header */}
                 <div className="text-center mb-8">
                     <div className="flex justify-center mb-4">
-                        <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ backgroundColor: "#000000" }}>
+                        <div className={`w-16 h-16 rounded-full flex items-center justify-center ${role === "vendor" ? "bg-green-500" : "bg-blue-500"}`}>
                             {role === "vendor" ? (
                                 <Store className="h-8 w-8 text-white" />
                             ) : (
@@ -128,7 +128,7 @@ export default function RegistrationForm() {
                             type="button"
                             onClick={() => setRole("user")}
                             className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${role === "user"
-                                    ? "bg-white text-black shadow-sm"
+                                    ? "bg-blue-50 text-blue-700 shadow-sm border border-blue-200"
                                     : "text-gray-600 hover:text-gray-900"
                                 }`}
                         >
@@ -141,7 +141,7 @@ export default function RegistrationForm() {
                             type="button"
                             onClick={() => setRole("vendor")}
                             className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${role === "vendor"
-                                    ? "bg-white text-black shadow-sm"
+                                    ? "bg-green-50 text-green-700 shadow-sm border border-green-200"
                                     : "text-gray-600 hover:text-gray-900"
                                 }`}
                         >
@@ -174,7 +174,7 @@ export default function RegistrationForm() {
                                     id="firstName"
                                     value={firstName}
                                     onChange={(e) => setFirstName(e.target.value)}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition-colors"
+                                    className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 transition-colors ${role === "user" ? "focus:ring-blue-500" : "focus:ring-green-500"}`}
                                     placeholder="Enter your first name"
                                     required
                                 />
@@ -188,7 +188,7 @@ export default function RegistrationForm() {
                                     id="lastName"
                                     value={lastName}
                                     onChange={(e) => setLastName(e.target.value)}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition-colors"
+                                    className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 transition-colors ${role === "user" ? "focus:ring-blue-500" : "focus:ring-green-500"}`}
                                     placeholder="Enter your last name"
                                     required
                                 />
@@ -209,7 +209,7 @@ export default function RegistrationForm() {
                                     id="businessName"
                                     value={businessName}
                                     onChange={(e) => setBusinessName(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition-colors"
+                                    className={`w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 transition-colors ${role === "user" ? "focus:ring-blue-500" : "focus:ring-green-500"}`}
                                     placeholder="Enter your business name"
                                     required
                                 />
@@ -267,7 +267,7 @@ export default function RegistrationForm() {
                                 id="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition-colors"
+                                className={`w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 transition-colors ${role === "user" ? "focus:ring-blue-500" : "focus:ring-green-500"}`}
                                 placeholder="Create a password"
                                 required
                             />
@@ -293,7 +293,7 @@ export default function RegistrationForm() {
                                 id="confirmPassword"
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
-                                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition-colors"
+                                className={`w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 transition-colors ${role === "user" ? "focus:ring-blue-500" : "focus:ring-green-500"}`}
                                 placeholder="Confirm your password"
                                 required
                             />
@@ -311,8 +311,7 @@ export default function RegistrationForm() {
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full py-3 rounded-full font-semibold text-white transition-all duration-300 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                        style={{ backgroundColor: "#000000" }}
+                        className={`w-full py-3 rounded-full font-semibold text-white transition-all duration-300 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed ${role === "user" ? "bg-blue-500 hover:bg-blue-600" : "bg-green-500 hover:bg-green-600"}`}
                     >
                         {isLoading ? "Creating Account..." : `Create ${role === "vendor" ? "Vendor" : "Customer"} Account`}
                     </button>

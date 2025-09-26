@@ -61,7 +61,7 @@ export default function CartPageContent() {
     return (
             <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#EDEAE4" }}>
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
                     <p className="text-lg font-medium" style={{ color: "#1A1A1A" }}>Loading your cart...</p>
                 </div>
             </div>
@@ -77,7 +77,7 @@ export default function CartPageContent() {
                     <p className="text-sm mt-2" style={{ color: "#555555" }}>Please try again later</p>
                     <button 
                         onClick={() => refetch()}
-                        className="mt-4 px-4 py-2 bg-black text-white rounded-full text-sm hover:opacity-90"
+                        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-full text-sm hover:bg-blue-700 transition-colors"
                     >
                         Try Again
                     </button>
@@ -170,8 +170,7 @@ export default function CartPageContent() {
                     </p>
                     <button 
                         onClick={() => router.push('/products')}
-                        className="px-8 py-3 rounded-full font-semibold text-white transition-all duration-300 hover:opacity-90"
-                        style={{ backgroundColor: "#000000" }}
+                        className="px-8 py-3 rounded-full font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-all duration-300"
                     >
                         Continue Shopping
                     </button>
@@ -342,8 +341,7 @@ export default function CartPageContent() {
                                 <button 
                                     onClick={() => router.push('/checkout')}
                                     disabled={cartItems.length === 0}
-                                    className="w-full py-4 rounded-full font-semibold text-white transition-all duration-300 hover:opacity-90 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    style={{ backgroundColor: "#000000" }}
+                                    className="w-full py-4 rounded-full font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     Proceed to Checkout
                                     <ArrowRight className="h-5 w-5" />

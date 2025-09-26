@@ -60,7 +60,7 @@ export default function CustomerLogin() {
                 {/* Header */}
                 <div className="text-center mb-8">
                     <div className="flex justify-center mb-4">
-                        <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ backgroundColor: "#000000" }}>
+                        <div className="w-16 h-16 rounded-full flex items-center justify-center bg-blue-500">
                             <ShoppingBag className="h-8 w-8 text-white" />
                         </div>
                     </div>
@@ -82,7 +82,7 @@ export default function CustomerLogin() {
                                 type="email"
                                 id="email"
                                 placeholder="Enter your email"
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition-colors"
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
@@ -117,8 +117,7 @@ export default function CustomerLogin() {
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full py-3 rounded-full font-semibold text-white transition-all duration-300 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                        style={{ backgroundColor: "#000000" }}
+                        className="w-full py-3 rounded-full font-semibold text-white bg-blue-500 hover:bg-blue-600 transition-all duration-300 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {isLoading ? "Signing in..." : "Sign In"}
                     </button>

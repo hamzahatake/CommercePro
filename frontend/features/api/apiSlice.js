@@ -6,7 +6,7 @@ import { baseQueryWithReauth } from "./baseQuerry.js";
 export const apiSlice = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["Cart", "Wishlist", "Products", "Orders", "Vendors", "Product", "Managers", "Users"],
+  tagTypes: ["Cart", "Wishlist", "Products", "Orders", "Vendors", "Product", "Managers", "Users", "Categories"],
   endpoints: (builder) => ({
 
     // --- User ---
@@ -133,6 +133,11 @@ export const apiSlice = createApi({
       query: ({ slug }) => `products/${slug}/`,
       transformResponse: (response) => normalizeProduct(response),
       providesTags: (result, error, { slug }) => [{ type: 'Product', id: slug }],
+    }),
+
+    getCategories: builder.query({
+      query: () => "products/categories/",
+      providesTags: ["Categories"],
     }),
 
     addProduct: builder.mutation({
@@ -280,6 +285,7 @@ export const {
   useCreateOrderMutation,
   useGetProductsQuery,
   useGetProductDetailQuery,
+  useGetCategoriesQuery,
   useAddProductMutation,
   useUpdateProductMutation,
   useDeleteProductMutation,

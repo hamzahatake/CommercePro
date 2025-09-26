@@ -169,10 +169,10 @@ export default function InfoColumn({ product, variants = [], variantIndex = 0, o
                 // No popup on error either - let the animation handle feedback
               }
             }}
-            className={`flex-1 py-3 rounded-full font-medium text-sm cursor-pointer transition-opacity ${
+            className={`flex-1 py-3 rounded-full font-medium text-sm cursor-pointer transition-colors ${
               sizes.length > 0 && sizeIndex === -1 
                 ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
-                : 'bg-black text-white hover:opacity-90'
+                : 'bg-blue-600 text-white hover:bg-blue-700'
             }`}
           >
             {!isAuthenticated 

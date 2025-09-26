@@ -1,5 +1,6 @@
-from rest_framework import viewsets, generics, filters
+from rest_framework import viewsets, generics, filters, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend, FilterSet, CharFilter
 from rest_framework.pagination import PageNumberPagination
@@ -45,6 +46,34 @@ class VendorProductViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(vendor=self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        # Handle variants data from JSON string
+        if 'variants' in request.data and isinstance(request.data['variants'], str):
+            try:
+                import json
+                request.data['variants'] = json.loads(request.data['variants'])
+            except json.JSONDecodeError:
+                return Response({'variants': 'Invalid JSON format'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        # Create the product with variants
+        product = serializer.save()
+        
+        # Handle image uploads for variants
+        for variant_index, variant in enumerate(product.variants.all()):
+            variant_images = []
+            for key, value in request.FILES.items():
+                if key.startswith(f'variant_{variant_index}_image_'):
+                    variant_images.append(value)
+            
+            for image_file in variant_images:
+                ProductImage.objects.create(variant=variant, image=image_file)
+        
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def get_serializer_context(self):
         context = super().get_serializer_context()

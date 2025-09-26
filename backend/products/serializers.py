@@ -39,7 +39,7 @@ class ProductSizeSerializer(serializers.ModelSerializer):
 
 class ProductVariantSerializer(serializers.ModelSerializer):
     images = ProductImageSerializer(many=True, read_only=True)
-    sizes = ProductSizeSerializer(many=True, read_only=True)
+    sizes = ProductSizeSerializer(many=True)
 
     class Meta:
         model = ProductVariant
@@ -71,7 +71,7 @@ class ProductMediaSectionSerializer(serializers.ModelSerializer):
 
 
 class BaseProductSerializer(serializers.ModelSerializer):
-    category = CategorySerializer(many=True, read_only=True)
+    category = CategorySerializer(read_only=True)
     variants = ProductVariantSerializer(many=True, read_only=True)
 
     class Meta:
@@ -94,6 +94,7 @@ class BaseProductSerializer(serializers.ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
     category_id = serializers.IntegerField(write_only=True, required=False, allow_null=True)
     media_sections = ProductMediaSectionSerializer(many=True, read_only=True)
+    variants = ProductVariantSerializer(many=True, required=False)
 
     class Meta(BaseProductSerializer):
         fields = BaseProductSerializer.Meta.fields + [
@@ -101,6 +102,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "is_active",
             "updated_at",
             "media_sections",
+            "variants",
         ] 
         read_only_fields = ["id", "vendor", "slug", "created_at", "updated_at", "stock"]
 
@@ -108,6 +110,19 @@ class ProductSerializer(serializers.ModelSerializer):
         if value <= 0:
             raise serializers.ValidationError("Price must be positive.")
         return value
+    
+    def create(self, validated_data):
+        variants_data = validated_data.pop('variants', [])
+        product = Product.objects.create(**validated_data)
+        
+        for variant_data in variants_data:
+            sizes_data = variant_data.pop('sizes', [])
+            variant = ProductVariant.objects.create(product=product, **variant_data)
+            
+            for size_data in sizes_data:
+                ProductSize.objects.create(variant=variant, **size_data)
+        
+        return product
     
 
 class ProductPublicSerializer(serializers.ModelSerializer):

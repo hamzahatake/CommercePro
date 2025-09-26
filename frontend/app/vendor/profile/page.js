@@ -31,7 +31,7 @@ export default function VendorProfile() {
                     <p className="text-lg font-medium text-gray-600 mb-4">Please log in to view your vendor profile</p>
                     <a 
                         href="/login/vendor" 
-                        className="px-6 py-2 bg-black text-white rounded-full hover:bg-gray-800 transition-colors">
+                        className="px-6 py-2 bg-green-600 text-white rounded-full hover:bg-green-700 transition-colors">
                         Go to Vendor Login
                     </a>
                 </div>
@@ -47,7 +47,7 @@ export default function VendorProfile() {
                     <p className="text-lg font-medium text-gray-600 mb-4">This page is for vendors only</p>
                     <a 
                         href="/profile" 
-                        className="px-6 py-2 bg-black text-white rounded-full hover:bg-gray-800 transition-colors">
+                        className="px-6 py-2 bg-green-600 text-white rounded-full hover:bg-green-700 transition-colors">
                         Go to Profile
                     </a>
                 </div>
@@ -59,7 +59,7 @@ export default function VendorProfile() {
         return (
             <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#ECE9E2' }}>
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
                     <p className="text-lg font-medium">Loading your vendor profile...</p>
                 </div>
             </div>
@@ -73,7 +73,7 @@ export default function VendorProfile() {
                     <p className="text-lg font-medium text-red-600 mb-4">Error loading vendor profile</p>
                     <button 
                         onClick={() => window.location.reload()} 
-                        className="px-6 py-2 bg-black text-white rounded-full hover:bg-gray-800 transition-colors">
+                        className="px-6 py-2 bg-green-600 text-white rounded-full hover:bg-green-700 transition-colors">
                         Retry
                     </button>
                 </div>
@@ -130,11 +130,11 @@ export default function VendorProfile() {
                         </div>
 
                         <div className="flex gap-3">
-                            <button className="flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-full font-medium hover:bg-gray-200 transition-colors">
+                            <button className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-full font-medium hover:bg-green-700 transition-colors">
                                 <Edit3 className="w-4 h-4" />
                                 Edit Profile
                             </button>
-                            <button className="flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-full font-medium hover:bg-gray-200 transition-colors">
+                            <button className="flex items-center gap-2 px-6 py-3 bg-green-100 text-green-700 rounded-full font-medium hover:bg-green-200 transition-colors">
                                 <Settings className="w-4 h-4" />
                                 Settings
                             </button>
@@ -149,8 +149,8 @@ export default function VendorProfile() {
                         {/* Business Information */}
                         <div className="bg-white rounded-3xl shadow-sm p-8">
                             <div className="flex items-center gap-3 mb-6">
-                                <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                                    <Store className="w-5 h-5 text-gray-600" />
+                                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                    <Store className="w-5 h-5 text-green-600" />
                                 </div>
                                 <h2 className="text-2xl font-bold text-gray-900">Business Information</h2>
                             </div>
@@ -198,7 +198,7 @@ export default function VendorProfile() {
                                 <p className="text-lg text-gray-900 font-medium">
                                     {vendorProfile?.address || 'Address not provided'}
                                 </p>
-                                <button className="mt-4 text-blue-600 font-medium hover:text-blue-700 transition-colors">
+                                <button className="mt-4 text-green-600 font-medium hover:text-green-700 transition-colors">
                                     Update Address
                                 </button>
                             </div>
@@ -260,17 +260,17 @@ export default function VendorProfile() {
                             <div className="space-y-3">
                                 <a 
                                     href="/vendor/dashboard" 
-                                    className="block w-full text-center py-3 bg-black text-white rounded-full font-medium hover:bg-gray-800 transition-colors">
+                                    className="block w-full text-center py-3 bg-green-600 text-white rounded-full font-medium hover:bg-green-700 transition-colors">
                                     Go to Dashboard
                                 </a>
                                 <a 
                                     href="/vendor/products" 
-                                    className="block w-full text-center py-3 bg-gray-100 text-gray-700 rounded-full font-medium hover:bg-gray-200 transition-colors">
+                                    className="block w-full text-center py-3 bg-green-100 text-green-700 rounded-full font-medium hover:bg-green-200 transition-colors">
                                     Manage Products
                                 </a>
                                 <a 
                                     href="/vendor/orders" 
-                                    className="block w-full text-center py-3 bg-gray-100 text-gray-700 rounded-full font-medium hover:bg-gray-200 transition-colors">
+                                    className="block w-full text-center py-3 bg-green-100 text-green-700 rounded-full font-medium hover:bg-green-200 transition-colors">
                                     View Orders
                                 </a>
                             </div>

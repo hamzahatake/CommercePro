@@ -37,7 +37,17 @@ from .views import (
     # Simplified user management views
     UserManagementListView,
     UserManagementDetailView,
-    AdminUserCreateView
+    AdminUserCreateView,
+    
+    # Permission management views
+    PermissionListView,
+    PermissionDetailView,
+    RolePermissionListView,
+    RolePermissionDetailView,
+    RolePermissionAssignmentView,
+    RolePermissionsView,
+    AvailablePermissionsView,
+    UserPermissionsView
 )
 
 urlpatterns = [
@@ -80,4 +90,14 @@ urlpatterns = [
     path("admin/users/", UserManagementListView.as_view(), name="admin-users-list"),
     path("admin/users/create/", AdminUserCreateView.as_view(), name="admin-user-create"),
     path("admin/users/<int:pk>/", UserManagementDetailView.as_view(), name="admin-user-detail"),
+    
+    # Permission management endpoints
+    path("admin/permissions/", PermissionListView.as_view(), name="admin-permissions-list"),
+    path("admin/permissions/<int:pk>/", PermissionDetailView.as_view(), name="admin-permission-detail"),
+    path("admin/role-permissions/", RolePermissionListView.as_view(), name="admin-role-permissions-list"),
+    path("admin/role-permissions/<int:pk>/", RolePermissionDetailView.as_view(), name="admin-role-permission-detail"),
+    path("admin/role-permissions/assign/", RolePermissionAssignmentView.as_view(), name="admin-role-permission-assign"),
+    path("admin/roles/<str:role>/permissions/", RolePermissionsView.as_view(), name="admin-role-permissions"),
+    path("admin/roles/<str:role>/available-permissions/", AvailablePermissionsView.as_view(), name="admin-available-permissions"),
+    path("auth/user-permissions/", UserPermissionsView.as_view(), name="user-permissions"),
 ]

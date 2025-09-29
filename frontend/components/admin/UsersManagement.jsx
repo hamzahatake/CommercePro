@@ -76,7 +76,6 @@ export default function UsersManagement() {
             case 'admin': return 'bg-red-100 text-red-800';
             case 'manager': return 'bg-purple-100 text-purple-800';
             case 'vendor': return 'bg-blue-100 text-blue-800';
-            case 'customer': return 'bg-green-100 text-green-800';
             default: return 'bg-gray-100 text-gray-800';
         }
     };
@@ -86,7 +85,6 @@ export default function UsersManagement() {
             case 'admin': return <Shield className="w-4 h-4" />;
             case 'manager': return <Users className="w-4 h-4" />;
             case 'vendor': return <Users className="w-4 h-4" />;
-            case 'customer': return <Users className="w-4 h-4" />;
             default: return <Users className="w-4 h-4" />;
         }
     };
@@ -164,7 +162,6 @@ export default function UsersManagement() {
                             <option value="admin">Admin</option>
                             <option value="manager">Manager</option>
                             <option value="vendor">Vendor</option>
-                            <option value="customer">Customer</option>
                         </select>
                         <select
                             value={statusFilter}

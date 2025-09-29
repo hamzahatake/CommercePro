@@ -6,7 +6,7 @@ import { baseQueryWithReauth } from "./baseQuerry.js";
 export const apiSlice = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["Cart", "Wishlist", "Products", "Orders", "Vendors", "Product", "Managers", "Users", "Categories"],
+  tagTypes: ["Cart", "Wishlist", "Products", "Orders", "Vendors", "Product", "Managers", "Users", "Categories", "Permissions", "RolePermissions"],
   endpoints: (builder) => ({
 
     // --- User ---
@@ -269,7 +269,87 @@ export const apiSlice = createApi({
       ],
     }),
 
-    // Note: Removed complex role management endpoints as we simplified to use simple role field
+    // --- Permission Management ---
+    getPermissions: builder.query({
+      query: ({ search } = {}) => {
+        const params = new URLSearchParams();
+        if (search) params.append('search', search);
+        return `admin/permissions/${params.toString() ? `?${params.toString()}` : ''}`;
+      },
+      providesTags: ["Permissions"],
+    }),
+    createPermission: builder.mutation({
+      query: (body) => ({
+        url: "admin/permissions/",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Permissions"],
+    }),
+    updatePermission: builder.mutation({
+      query: ({ id, ...body }) => ({
+        url: `admin/permissions/${id}/`,
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: (result, error, { id }) => [
+        { type: "Permissions", id },
+        "Permissions",
+      ],
+    }),
+    deletePermission: builder.mutation({
+      query: (id) => ({
+        url: `admin/permissions/${id}/`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (result, error, id) => [
+        { type: "Permissions", id },
+        "Permissions",
+      ],
+    }),
+
+    // --- Role Permission Management ---
+    getRolePermissions: builder.query({
+      query: ({ role } = {}) => {
+        const params = new URLSearchParams();
+        if (role) params.append('role', role);
+        return `admin/role-permissions/${params.toString() ? `?${params.toString()}` : ''}`;
+      },
+      providesTags: ["RolePermissions"],
+    }),
+    assignRolePermissions: builder.mutation({
+      query: (body) => ({
+        url: "admin/role-permissions/assign/",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["RolePermissions"],
+    }),
+    removeRolePermission: builder.mutation({
+      query: (id) => ({
+        url: `admin/role-permissions/${id}/`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["RolePermissions"],
+    }),
+    getRolePermissionsByRole: builder.query({
+      query: (role) => `admin/roles/${role}/permissions/`,
+      providesTags: (result, error, role) => [
+        { type: "RolePermissions", id: role },
+        "RolePermissions",
+      ],
+    }),
+    getAvailablePermissionsForRole: builder.query({
+      query: (role) => `admin/roles/${role}/available-permissions/`,
+      providesTags: (result, error, role) => [
+        { type: "Permissions", id: `available-${role}` },
+        "Permissions",
+      ],
+    }),
+    getUserPermissions: builder.query({
+      query: () => "auth/user-permissions/",
+      providesTags: ["Permissions"],
+    }),
   }),
 });
 
@@ -309,4 +389,15 @@ export const {
   useGetUserDetailQuery,
   useUpdateUserMutation,
   useDeleteUserMutation,
+  // Permission Management
+  useGetPermissionsQuery,
+  useCreatePermissionMutation,
+  useUpdatePermissionMutation,
+  useDeletePermissionMutation,
+  useGetRolePermissionsQuery,
+  useAssignRolePermissionsMutation,
+  useRemoveRolePermissionMutation,
+  useGetRolePermissionsByRoleQuery,
+  useGetAvailablePermissionsForRoleQuery,
+  useGetUserPermissionsQuery,
 } = apiSlice;

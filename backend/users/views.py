@@ -32,11 +32,16 @@ from .serializers import (
     
     # Admin user management serializers
     AdminUserSerializer,
-    UserListSerializer
+    UserListSerializer,
+    
+    # Permission management serializers
+    PermissionSerializer,
+    RolePermissionSerializer,
+    RolePermissionAssignmentSerializer
     )
 from .models import (
     CustomerProfile, VendorProfile, ManagerProfile, AdminProfile, 
-    EmailVerificationToken, PasswordResetToken
+    EmailVerificationToken, PasswordResetToken, Permission, RolePermission
 )
 from .permissions import IsAdminUser
 
@@ -567,3 +572,137 @@ class AdminUserCreateView(generics.CreateAPIView):
         send_welcome_email_task_new.delay(user.id)
         
         return user
+
+
+# Permission Management Views
+class PermissionListView(generics.ListCreateAPIView):
+    """List all permissions or create a new permission"""
+    permission_classes = [IsAdminUser]
+    serializer_class = PermissionSerializer
+    
+    def get_queryset(self):
+        queryset = Permission.objects.all()
+        
+        # Search by name or codename
+        search = self.request.query_params.get('search', None)
+        if search:
+            queryset = queryset.filter(
+                Q(name__icontains=search) | Q(codename__icontains=search)
+            )
+        
+        return queryset.order_by('name')
+
+
+class PermissionDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Retrieve, update or delete a permission"""
+    permission_classes = [IsAdminUser]
+    serializer_class = PermissionSerializer
+    queryset = Permission.objects.all()
+
+
+class RolePermissionListView(generics.ListCreateAPIView):
+    """List role permissions or assign permissions to a role"""
+    permission_classes = [IsAdminUser]
+    serializer_class = RolePermissionSerializer
+    
+    def get_queryset(self):
+        queryset = RolePermission.objects.select_related('permission')
+        
+        # Filter by role if specified
+        role_filter = self.request.query_params.get('role', None)
+        if role_filter:
+            queryset = queryset.filter(role=role_filter)
+        
+        return queryset.order_by('role', 'permission__name')
+
+
+class RolePermissionDetailView(generics.RetrieveDestroyAPIView):
+    """Retrieve or remove a specific role permission"""
+    permission_classes = [IsAdminUser]
+    serializer_class = RolePermissionSerializer
+    queryset = RolePermission.objects.all()
+
+
+class RolePermissionAssignmentView(APIView):
+    """Bulk assign permissions to a role"""
+    permission_classes = [IsAdminUser]
+    
+    def post(self, request):
+        """Assign multiple permissions to a role"""
+        serializer = RolePermissionAssignmentSerializer(data=request.data)
+        if serializer.is_valid():
+            result = serializer.save()
+            return Response({
+                'message': 'Role permissions updated successfully',
+                'details': result
+            }, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class RolePermissionsView(APIView):
+    """Get all permissions for a specific role"""
+    permission_classes = [IsAdminUser]
+    
+    def get(self, request, role):
+        """Get all permissions assigned to a role"""
+        if role not in [choice[0] for choice in User.Roles.choices]:
+            return Response(
+                {'error': 'Invalid role'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        permissions = Permission.objects.filter(
+            role_permissions__role=role
+        ).order_by('name')
+        
+        serializer = PermissionSerializer(permissions, many=True)
+        return Response({
+            'role': role,
+            'role_display': dict(User.Roles.choices).get(role, role.title()),
+            'permissions': serializer.data
+        })
+
+
+class AvailablePermissionsView(APIView):
+    """Get permissions not assigned to a specific role"""
+    permission_classes = [IsAdminUser]
+    
+    def get(self, request, role):
+        """Get permissions not assigned to a role"""
+        if role not in [choice[0] for choice in User.Roles.choices]:
+            return Response(
+                {'error': 'Invalid role'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        assigned_permissions = Permission.objects.filter(
+            role_permissions__role=role
+        ).values_list('id', flat=True)
+        
+        available_permissions = Permission.objects.exclude(
+            id__in=assigned_permissions
+        ).order_by('name')
+        
+        serializer = PermissionSerializer(available_permissions, many=True)
+        return Response({
+            'role': role,
+            'available_permissions': serializer.data
+        })
+
+
+class UserPermissionsView(APIView):
+    """Get permissions for the current user"""
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        """Get all permissions for the current user's role"""
+        user = request.user
+        permissions = user.get_permissions()
+        
+        serializer = PermissionSerializer(permissions, many=True)
+        return Response({
+            'user_id': user.id,
+            'role': user.role,
+            'role_display': user.get_role_display_name(),
+            'permissions': serializer.data
+        })

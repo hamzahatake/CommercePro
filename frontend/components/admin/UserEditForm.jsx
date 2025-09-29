@@ -237,7 +237,6 @@ export default function UserEditFormComponent({ userId, router }) {
                                 onChange={handleInputChange}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent"
                             >
-                                <option value="customer">Customer</option>
                                 <option value="vendor">Vendor</option>
                                 <option value="manager">Manager</option>
                                 <option value="admin">Admin</option>

@@ -33,6 +33,22 @@ class User(AbstractUser):
         """Get the display name for the user's role"""
         return dict(self.Roles.choices).get(self.role, self.role.title())
     
+    def has_permission(self, permission_codename):
+        """Check if user has a specific permission based on their role"""
+        try:
+            return RolePermission.objects.filter(
+                role=self.role,
+                permission__codename=permission_codename
+            ).exists()
+        except RolePermission.DoesNotExist:
+            return False
+    
+    def get_permissions(self):
+        """Get all permissions for the user's role"""
+        return Permission.objects.filter(
+            role_permissions__role=self.role
+        ).distinct()
+    
 
 class CustomerProfile(models.Model):
     class PaymentMethods(models.TextChoices):
@@ -143,5 +159,38 @@ class PasswordResetToken(models.Model):
         self.save()
 
 
-# Note: Removed complex role management system in favor of simple role field on User model
-# This simplifies the system and eliminates redundancy
+class Permission(models.Model):
+    """Custom permission model for dynamic permission management"""
+    name = models.CharField(max_length=255, unique=True)
+    codename = models.CharField(max_length=255, unique=True)
+    description = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['name']
+        verbose_name = 'Permission'
+        verbose_name_plural = 'Permissions'
+    
+    def __str__(self):
+        return self.name
+
+
+class RolePermission(models.Model):
+    """Model to assign permissions to roles"""
+    role = models.CharField(max_length=255, choices=User.Roles.choices)
+    permission = models.ForeignKey(Permission, on_delete=models.CASCADE, related_name='role_permissions')
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ['role', 'permission']
+        ordering = ['role', 'permission__name']
+        verbose_name = 'Role Permission'
+        verbose_name_plural = 'Role Permissions'
+    
+    def __str__(self):
+        return f"{self.get_role_display()} - {self.permission.name}"
+
+
+# Note: Enhanced role management system with dynamic permissions
+# This allows flexible permission assignment to any role

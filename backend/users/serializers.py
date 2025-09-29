@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import (
     User, VendorProfile, EmailVerificationToken, PasswordResetToken,
-    CustomerProfile, ManagerProfile, AdminProfile
+    CustomerProfile, ManagerProfile, AdminProfile, Permission, RolePermission
 )
 from django.contrib.auth import get_user_model, authenticate
 from rest_framework.validators import ValidationError
@@ -491,3 +491,110 @@ class UserListSerializer(serializers.ModelSerializer):
     def get_role_display(self, obj):
         """Get user's role display name"""
         return obj.get_role_display_name()
+
+
+class PermissionSerializer(serializers.ModelSerializer):
+    """Serializer for Permission model"""
+    
+    class Meta:
+        model = Permission
+        fields = ['id', 'name', 'codename', 'description', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
+    
+    def validate_codename(self, value):
+        """Ensure codename is unique and follows naming conventions"""
+        if self.instance and self.instance.codename == value:
+            return value
+        
+        if Permission.objects.filter(codename=value).exists():
+            raise serializers.ValidationError("A permission with this codename already exists.")
+        
+        # Ensure codename follows Django permission naming conventions
+        if not value.replace('_', '').isalnum():
+            raise serializers.ValidationError("Codename must contain only letters, numbers, and underscores.")
+        
+        return value.lower()
+
+
+class RolePermissionSerializer(serializers.ModelSerializer):
+    """Serializer for RolePermission model"""
+    permission_name = serializers.CharField(source='permission.name', read_only=True)
+    permission_codename = serializers.CharField(source='permission.codename', read_only=True)
+    role_display = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = RolePermission
+        fields = ['id', 'role', 'permission', 'permission_name', 'permission_codename', 
+                 'role_display', 'created_at']
+        read_only_fields = ['id', 'created_at']
+    
+    def get_role_display(self, obj):
+        """Get role display name"""
+        return dict(User.Roles.choices).get(obj.role, obj.role.title())
+    
+    def validate(self, attrs):
+        """Ensure unique role-permission combination"""
+        role = attrs.get('role')
+        permission = attrs.get('permission')
+        
+        if self.instance:
+            # For updates, allow same combination
+            if self.instance.role == role and self.instance.permission == permission:
+                return attrs
+        
+        if RolePermission.objects.filter(role=role, permission=permission).exists():
+            raise serializers.ValidationError("This role already has this permission.")
+        
+        return attrs
+
+
+class RolePermissionAssignmentSerializer(serializers.Serializer):
+    """Serializer for bulk role permission assignments"""
+    role = serializers.ChoiceField(choices=User.Roles.choices)
+    permissions = serializers.ListField(
+        child=serializers.IntegerField(),
+        allow_empty=True
+    )
+    
+    def validate_permissions(self, value):
+        """Validate that all permission IDs exist"""
+        permission_ids = Permission.objects.filter(id__in=value).values_list('id', flat=True)
+        invalid_ids = set(value) - set(permission_ids)
+        
+        if invalid_ids:
+            raise serializers.ValidationError(f"Invalid permission IDs: {list(invalid_ids)}")
+        
+        return value
+    
+    def save(self):
+        """Create or update role permissions"""
+        role = self.validated_data['role']
+        permission_ids = self.validated_data['permissions']
+        
+        # Get existing permissions for this role
+        existing_permissions = set(
+            RolePermission.objects.filter(role=role).values_list('permission_id', flat=True)
+        )
+        new_permissions = set(permission_ids)
+        
+        # Permissions to add
+        to_add = new_permissions - existing_permissions
+        # Permissions to remove
+        to_remove = existing_permissions - new_permissions
+        
+        # Remove permissions
+        if to_remove:
+            RolePermission.objects.filter(role=role, permission_id__in=to_remove).delete()
+        
+        # Add new permissions
+        role_permissions = [
+            RolePermission(role=role, permission_id=permission_id)
+            for permission_id in to_add
+        ]
+        RolePermission.objects.bulk_create(role_permissions)
+        
+        return {
+            'role': role,
+            'added_permissions': list(to_add),
+            'removed_permissions': list(to_remove)
+        }

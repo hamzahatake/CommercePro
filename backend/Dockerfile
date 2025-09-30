@@ -23,5 +23,5 @@ COPY . .
 # Expose Django dev server port
 EXPOSE 8000
 
-# Run Django development server (with auto reload)
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# Run Gunicorn production server
+CMD ["gunicorn", "backend.wsgi:application", "--bind", "0.0.0.0:8000"]

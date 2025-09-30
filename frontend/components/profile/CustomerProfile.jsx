@@ -79,7 +79,8 @@ export default function CustomerProfileComponent({ authUser }) {
 
             console.log('Sending form data:', Object.fromEntries(formDataToSend.entries()));
 
-            const response = await fetch('http://localhost:8000/api/users/api/profile/customer/', {
+            const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+            const response = await fetch(`${apiBase}/users/api/profile/customer/`, {
                 method: 'PATCH',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,

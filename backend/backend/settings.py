@@ -34,7 +34,7 @@ DEBUG = os.getenv("DJANGO_DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = os.getenv(
     "ALLOWED_HOSTS",
-    "127.0.0.1,localhost,commercepro.onrender.com"
+    "127.0.0.1,localhost,commercepro.onrender.com,commercepro-frontend.vercel.app"
 ).split(",")
 
 # Render provides a dynamic port; ensure it's available for the process manager
@@ -76,7 +76,17 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = [
+    "https://commercepro-frontend.vercel.app",
+    "https://commercepro.onrender.com",
+    "http://localhost:3000",
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://commercepro.onrender.com",
+    "https://commercepro-frontend.vercel.app",
+]
 
 ROOT_URLCONF = 'backend.urls'
 

@@ -34,7 +34,7 @@ DEBUG = os.getenv("DJANGO_DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = os.getenv(
     "ALLOWED_HOSTS",
-    "127.0.0.1,localhost,your-app-name.onrender.com"
+    "127.0.0.1,localhost,commercepro.onrender.com"
 ).split(",")
 
 # Render provides a dynamic port; ensure it's available for the process manager

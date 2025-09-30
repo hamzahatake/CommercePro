@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useGetProductsQuery } from '@/features/api/apiSlice';
 import ShoeCard from './ShoeCard';
@@ -9,77 +9,37 @@ import ShoeLoader from '@/components/ShoeLoader';
 
 const ShoeCarousel = () => {
   // Fetch products using RTK Query
-  const { data: productsData, isLoading, error } = useGetProductsQuery({
-    page: 1,
-    page_size: 20
+  const { data: productsData, isLoading, error } = useGetProductsQuery({ 
+    page: 1, 
+    page_size: 20 
   });
-
+  
   const allProducts = productsData?.results || [];
-  const originalProducts = allProducts.slice(0, 20); // Limit to 20 cards
-
-  // Create infinite loop by duplicating products
-  const products = [
-    ...originalProducts.slice(-3), // Last 3 products at the beginning
-    ...originalProducts,
-    ...originalProducts.slice(0, 3) // First 3 products at the end
-  ];
-
-  const [currentIndex, setCurrentIndex] = useState(3); // Start at the first real product
+  const products = allProducts.slice(0, 20); // Limit to 20 cards
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState(0);
-  const [activeCategory, setActiveCategory] = useState('men'); // Track active category
+  const [dragOffset, setDragOffset] = useState(0);
   const containerRef = useRef(null);
 
   const cardsPerView = 4;
-  const cardWidth = 450;
-  const gap = 16;
-  const cardTotalWidth = cardWidth + gap;
-
-  // Motion values for smooth dragging
-  const x = useMotionValue(0);
-  const xSpring = useSpring(x, { stiffness: 300, damping: 30 });
-
-  // Calculate the current position
-  const currentX = -(currentIndex * cardTotalWidth);
-
-  // Update motion value when currentIndex changes
-  useEffect(() => {
-    if (!isDragging) {
-      x.set(currentX);
-    }
-  }, [currentIndex, currentX, isDragging, x]);
-
-  // Handle infinite loop transitions smoothly - only jump when absolutely necessary
-  useEffect(() => {
-    if (!isDragging) {
-      const timer = setTimeout(() => {
-        // Only jump if we're way beyond the duplicated cards
-        if (currentIndex >= originalProducts.length + 3) {
-          // We're at the duplicated cards at the end, jump to real first cards
-          setCurrentIndex(3);
-        } else if (currentIndex < 0) {
-          // We're at the duplicated cards at the beginning, jump to real last cards
-          setCurrentIndex(originalProducts.length + 2);
-        }
-      }, 150); // Longer delay to ensure smooth transition
-
-      return () => clearTimeout(timer);
-    }
-  }, [currentIndex, isDragging, originalProducts.length]);
+  const maxIndex = products.length - cardsPerView;
 
   const nextSlide = () => {
     setCurrentIndex(prev => {
-      const newIndex = prev + 1;
-      // Allow going beyond the real products to show duplicated cards
-      return newIndex;
+      if (prev >= maxIndex) {
+        return 0; // Loop back to start
+      }
+      return prev + 1;
     });
   };
 
   const prevSlide = () => {
     setCurrentIndex(prev => {
-      const newIndex = prev - 1;
-      // Allow going before the real products to show duplicated cards
-      return newIndex;
+      if (prev <= 0) {
+        return maxIndex; // Loop to end
+      }
+      return prev - 1;
     });
   };
 
@@ -87,29 +47,27 @@ const ShoeCarousel = () => {
   const handleDragStart = (clientX) => {
     setIsDragging(true);
     setDragStart(clientX);
+    setDragOffset(0);
   };
 
   const handleDragMove = (clientX) => {
     if (!isDragging) return;
     const deltaX = clientX - dragStart;
-    x.set(currentX + deltaX);
+    setDragOffset(deltaX);
   };
 
   const handleDragEnd = () => {
     if (!isDragging) return;
     setIsDragging(false);
-
-    const threshold = 30;
-    const deltaX = x.get() - currentX;
-
-    if (deltaX > threshold) {
+    
+    const threshold = 50;
+    if (dragOffset > threshold) {
       prevSlide();
-    } else if (deltaX < -threshold) {
+    } else if (dragOffset < -threshold) {
       nextSlide();
-    } else {
-      // Snap back to current position
-      x.set(currentX);
     }
+    
+    setDragOffset(0);
   };
 
   // Touch events
@@ -195,31 +153,13 @@ const ShoeCarousel = () => {
 
         {/* Left side - Text buttons */}
         <div className="flex pl-4 gap-4">
-          <button
-            onClick={() => setActiveCategory('men')}
-            className={`relative text-[16px] transition-colors duration-300 font-medium group pb-2 focus:outline-none focus:text-gray-700 ${activeCategory === 'men'
-                ? 'text-gray-700'
-                : 'text-[#000000] hover:text-gray-700'
-              }`}
-          >
+          <button className="relative text-[16px] text-[#000000] hover:text-gray-700 transition-colors duration-300 font-medium group">
             Shop Men
-            <span className={`absolute bottom-0 left-0 h-0.5 bg-gray-700 transition-all duration-300 ease-in-out ${activeCategory === 'men'
-                ? 'w-full'
-                : 'w-0 group-hover:w-full'
-              }`}></span>
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-700 transition-all duration-300 ease-in-out group-hover:w-full"></span>
           </button>
-          <button
-            onClick={() => setActiveCategory('women')}
-            className={`relative text-[16px] transition-colors duration-300 font-medium group pb-2 focus:outline-none focus:text-gray-700 ${activeCategory === 'women'
-                ? 'text-gray-700'
-                : 'text-[#000000] hover:text-gray-700'
-              }`}
-          >
+          <button className="relative text-[16px] text-[#000000] hover:text-gray-700 transition-colors duration-300 font-medium group">
             Shop Women
-            <span className={`absolute bottom-0 left-0 h-0.5 bg-gray-700 transition-all duration-300 ease-in-out ${activeCategory === 'women'
-                ? 'w-full'
-                : 'w-0 group-hover:w-full'
-              }`}></span>
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-700 transition-all duration-300 ease-in-out group-hover:w-full"></span>
           </button>
         </div>
 
@@ -241,7 +181,7 @@ const ShoeCarousel = () => {
       </div>
 
       {/* Carousel Container */}
-      <div
+      <div 
         ref={containerRef}
         className="relative overflow-hidden"
         onTouchStart={handleTouchStart}
@@ -252,9 +192,16 @@ const ShoeCarousel = () => {
       >
         <motion.div
           className="flex gap-4"
+          animate={{
+            x: -(currentIndex * (256 + 16)) + dragOffset, // 256px card width + 16px gap
+          }}
+          transition={{
+            type: "spring",
+            stiffness: 300,
+            damping: 30,
+          }}
           style={{
-            x: xSpring,
-            width: `${products.length * cardTotalWidth}px`,
+            width: `${products.length * (256 + 16)}px`, // Total width for all cards
           }}
         >
           {products.map((product, index) => (

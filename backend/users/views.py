@@ -157,7 +157,6 @@ class UserRegistrationView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        logger.info(f"User created: {user.email}")
         
         # Create vendor profile if role is vendor
         if user.role == 'vendor' and 'business_name' in request.data:

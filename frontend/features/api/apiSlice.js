@@ -113,7 +113,7 @@ export const apiSlice = createApi({
     // --- Orders ---
     getOrders: builder.query({ query: () => "orders/" }),
     createOrder: builder.mutation({
-      query: (body) => ({ url: "orders/create/", method: "POST", body }),
+      query: (body) => ({ url: "orders/checkout/", method: "POST", body }),
     }),
 
     // --- Products ---

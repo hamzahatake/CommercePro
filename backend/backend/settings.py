@@ -14,7 +14,6 @@ import os
 from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
-import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -34,11 +33,8 @@ DEBUG = os.getenv("DJANGO_DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = os.getenv(
     "ALLOWED_HOSTS",
-    "127.0.0.1,localhost,commercepro.onrender.com,commercepro-frontend.vercel.app"
+    "127.0.0.1,localhost"
 ).split(",")
-
-# Render provides a dynamic port; ensure it's available for the process manager
-PORT = int(os.environ.get("PORT", 8000))
 
 
 # Application definition
@@ -76,17 +72,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CORS_ALLOW_ALL_ORIGINS = False
-CORS_ALLOWED_ORIGINS = [
-    "https://commercepro-frontend.vercel.app",
-    "https://commercepro.onrender.com",
-    "http://localhost:3000",
-]
-
-CSRF_TRUSTED_ORIGINS = [
-    "https://commercepro.onrender.com",
-    "https://commercepro-frontend.vercel.app",
-]
+CORS_ALLOW_ALL_ORIGINS = True
 
 ROOT_URLCONF = 'backend.urls'
 
@@ -112,11 +98,15 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-	"default": dj_database_url.parse(
-		os.environ.get("DATABASE_URL", ""),
-		conn_max_age=600,
-		ssl_require=True
-	)
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.getenv("POSTGRES_DB", "estore_db"),
+        "USER": os.getenv("POSTGRES_USER", "postgres"),
+        "PASSWORD": os.getenv("POSTGRES_PASSWORD", ""),
+        "HOST": os.getenv("POSTGRES_HOST", "db"),
+        "PORT": os.getenv("POSTGRES_PORT", "5432"),
+        "CONN_MAX_AGE": int(os.getenv("CONN_MAX_AGE", 600)),
+    }
 }
 
 # Password validation
@@ -192,7 +182,7 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-# Email (console for dev and to temporarily disable outbound email)
+# Email (console for dev)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'no-reply@yourapp.com'
 
@@ -201,8 +191,8 @@ STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY")
 STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY")
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET") or os.environ.get("STRIPE_CLI_WEBHOOK_SECRET")
 
-# Force console backend to prevent actual email sending in this phase
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# Email (sendgrid)
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
 EMAIL_HOST = os.getenv("EMAIL_HOST", "localhost")
 EMAIL_PORT = int(os.getenv("EMAIL_PORT", 25))
 EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "False") == "True"

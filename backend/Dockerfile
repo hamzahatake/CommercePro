@@ -23,5 +23,5 @@ COPY . .
 # Expose Django dev server port
 EXPOSE 8000
 
-# Run migrations at container start, then start Gunicorn bound to $PORT
-CMD ["sh", "-c", "python manage.py migrate --noinput && gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT"]
+# Run Django development server (with auto reload)
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

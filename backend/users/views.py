@@ -10,6 +10,7 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.utils import timezone
 from django.db.models import Q
+import logging
 from .serializers import (
     UserSerializer,
     UserRegistrationSerializer, 
@@ -46,6 +47,8 @@ from .models import (
 from .permissions import IsAdminUser
 
 User = get_user_model()
+
+logger = logging.getLogger(__name__)
 
 
 class UserProfileRegistrationView(generics.CreateAPIView):
@@ -154,6 +157,7 @@ class UserRegistrationView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
+        logger.info(f"User created: {user.email}")
         
         # Create vendor profile if role is vendor
         if user.role == 'vendor' and 'business_name' in request.data:

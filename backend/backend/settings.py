@@ -192,7 +192,7 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-# Email (console for dev)
+# Email (console for dev and to temporarily disable outbound email)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'no-reply@yourapp.com'
 
@@ -201,8 +201,8 @@ STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY")
 STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY")
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET") or os.environ.get("STRIPE_CLI_WEBHOOK_SECRET")
 
-# Email (sendgrid)
-EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+# Force console backend to prevent actual email sending in this phase
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 EMAIL_HOST = os.getenv("EMAIL_HOST", "localhost")
 EMAIL_PORT = int(os.getenv("EMAIL_PORT", 25))
 EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "False") == "True"

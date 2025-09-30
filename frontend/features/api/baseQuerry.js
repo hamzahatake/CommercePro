@@ -1,7 +1,8 @@
 import { fetchBaseQuery } from "@reduxjs/toolkit/query";
 import { logout, refreshAccessToken } from "../auth/authSlice";
 
-const baseApiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/";
+const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+const baseApiUrl = `${rawApiUrl.replace(/\/+$/, '')}/`;
 
 const baseQuery = fetchBaseQuery({
     baseUrl: baseApiUrl,

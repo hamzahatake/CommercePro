@@ -37,6 +37,9 @@ ALLOWED_HOSTS = os.getenv(
     "127.0.0.1,localhost,your-app-name.onrender.com"
 ).split(",")
 
+# Render provides a dynamic port; ensure it's available for the process manager
+PORT = int(os.environ.get("PORT", 8000))
+
 
 # Application definition
 
@@ -99,11 +102,11 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    "default": dj_database_url.config(
-        default=os.environ.get("DATABASE_URL"),
-        conn_max_age=600,
-        ssl_require=True
-    )
+	"default": dj_database_url.parse(
+		os.environ.get("DATABASE_URL", ""),
+		conn_max_age=600,
+		ssl_require=True
+	)
 }
 
 # Password validation
